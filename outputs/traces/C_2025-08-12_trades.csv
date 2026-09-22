@@ -1,0 +1,3 @@
+session_date,available_at,variant,reason,fill_price,shares_from,shares_to,traded,commission,slippage,cost
+2025-08-12,10:30:00,C,BC_enter_long,637.5623,0,432,432,1.512,0.432,1.944
+2025-08-12,16:00:00,C,session_close_flatten,640.913,432,0,432,1.512,0.432,1.944

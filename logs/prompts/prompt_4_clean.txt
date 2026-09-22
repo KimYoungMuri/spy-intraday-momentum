@@ -1,0 +1,209 @@
+Revise the existing B9339 Homework 1 project and `HW1_report.md` into a complete, internally consistent submission that meets the actual homework requirements.
+
+Read the homework PDF, paper, current report, implementation, tests, logs, and saved results before making changes. Work directly in the existing project. Preserve valid work and correct errors wherever they originate. Complete the revisions and verification rather than merely suggesting changes.
+
+The assignment values thoroughness and completeness over profitability. Do not optimize parameters to improve the headline results or add unrelated strategy research.
+
+## 1. Establish what is supported
+
+Create a checklist mapping the homework’s Step 1(a–e), Step 2, Step 3(1–4), and formatting instructions to report sections and supporting evidence.
+
+Distinguish:
+
+* Explicit assignment requirements.
+* Helpful additions that make our existing analysis understandable.
+* Optional extensions from the earlier implementation prompt.
+
+Verify every claim in the report against actual code or outputs. Do not assume that existing statements about tests, independent checks, trade statistics, or corrections are accurate merely because they appear in the report.
+
+Preserve the current report and results before revising them. If a code correction changes results, rerun all affected analyses and update every affected table, figure, summary, and interpretation.
+
+## 2. Document the actual AI-development process
+
+Expand Section 1.4 into a substantive account of how the implementation developed.
+
+Use actual available chat history, logs, snapshots, and test output. Include a table with:
+
+* Initial implementation or issue.
+* How the issue was discovered.
+* Why a correction was needed.
+* What changed.
+* Evidence that the change worked.
+* Effect on results, if known.
+
+Specifically investigate the existing references to the “half-day test assertion” and “delay-fill state machine.” Explain whether each involved a test error, strategy-code error, or clarification of assumptions. Do not portray a corrected test assertion as a discovered strategy bug.
+
+Include the exact initial prompt and available follow-up prompts in an appendix or accompanying transcript included with the submission. Summarize the important prompts and their purpose in the main report.
+
+Do not rely on a grader accessing our Cursor conversation. If an earlier prompt or implementation version is unavailable, state that honestly. Do not reconstruct invented messages, failures, iterations, or before-and-after results.
+
+Identify Cursor as the coding platform and acknowledge ChatGPT’s role in preparing the implementation brief and reviewing the report. Record the model only if actually known.
+
+## 3. Demonstrate implementation correctness
+
+Inspect the tests and independent reference checker. Confirm that the checker does not merely call the same production functions it claims to verify.
+
+Run the tests and produce a compact verification table showing:
+
+* Property checked.
+* Test or independent calculation used.
+* Expected versus actual outcome.
+* Numerical tolerance, where applicable.
+* Pass/fail result.
+
+Cover the main sources of error: lagged features, timing, state transitions, position sizing, transaction costs, reversal accounting, half-day liquidation, and daily-equity reconciliation. Add focused tests only where a meaningful gap exists.
+
+Existing agreement on bands, VWAP, and share count is useful but does not establish full P&L correctness. Add at least one worked example from an actual completed trade, showing:
+
+1. Date and information-availability time.
+2. Price, relevant band, and VWAP.
+3. Why the trade was entered.
+4. Prior equity, volatility estimate, exposure multiple, and rounded share quantity.
+5. Entry and exit prices/times and exit reason.
+6. Gross P&L.
+7. Commission and slippage on both sides.
+8. Net P&L and reconciliation to the trade ledger.
+
+Show substituted numbers and arithmetic, not just another assertion that a test passed. If practical, include a real reversal or half-day example as additional evidence. Use explicitly labeled synthetic fixtures only when the needed event does not occur in the actual data.
+
+Keep the distinction between AI-performed checks and human review. Do not claim that I manually verified a calculation unless I actually did.
+
+## 4. Resolve the report’s numerical and textual errors
+
+### Hit ratios
+
+The report currently says completed-trade hit ratios are lower than daily hit ratios, while quoting approximately 0.43 versus 0.27381.
+
+Recompute the statistics from the ledgers. Report and define:
+
+* Winning completed trades / all completed trades.
+* Winning days / all evaluated days.
+* Winning days / days traded, if useful.
+* Treatment of breakeven trades and flat days.
+
+Correct the explanation to match the verified numbers. Do not compare ratios with different denominators as though they measure the same thing.
+
+### Trade counts
+
+Determine what the reported 187 and 270 “trade events” actually count. Separate order/fill events, entries, reversals, and completed round trips as needed. Use consistent terminology throughout. A reversal may be one order but include an exit and a new entry.
+
+### Formula formatting
+
+Fix the malformed absolute-value expression so it reads:
+
+a_(d-i,h) = |P_(d-i,h) / O_(d-i) − 1|.
+
+Check that all equations render correctly in the final document.
+
+### Monday significance discussion
+
+Verify the paper’s Table 6 and accompanying prose. If Monday’s t-statistic is 1.84 and the stated two-sided 10% threshold is approximately 1.65, explain that it exceeds that threshold. Describe the actual inconsistency precisely rather than calling it merely “borderline.”
+
+### Cost versus delay effects
+
+Recompute and accurately summarize both sensitivities. The current report shows a much larger deterioration from delayed execution than from the tested slippage increases. Do not describe these as equally material effects.
+
+### Other interpretations
+
+Check every directional claim against the results. For example, do not say tighter exits reduced realized volatility in our sample if the A/B table shows the opposite.
+
+Explain the 2× leverage-cap experiment as a trade-off, not a uniquely optimal improvement. The report also shows a 1× cap with lower drawdown and higher Sharpe; explain the rationale for discussing 2× without ignoring that evidence.
+
+## 5. Make the methodology reproducible from the write-up
+
+Describe the actual implemented conventions, correcting code if they reveal an error:
+
+* Exact meaning of original timestamps versus information-availability times.
+* Evidence for the inferred bar-start interpretation and the remaining uncertainty.
+* Use of the first bar’s endpoint as a 10:00 anchor rather than a verified 09:30 open.
+* First eligible entry time and when daily share sizing becomes possible.
+* The rule for missing afternoon observations in the 14-session history after half-days: skip missing values, reach farther back, or suppress signals. Specify effective observation counts and consequences.
+* Whether missing historical values accidentally change the meaning of a “14-day” average.
+* Treatment of the last regular bar and separate closing print, without introducing a fictitious extra return interval.
+* Long/short/flat state transitions, stop conditions, equality handling, re-entry, and reversals.
+* Fixed daily quantities and whether they are recalculated after trades.
+* Transaction-cost accounting and final liquidation.
+* Daily equity and return calculations.
+* The benchmark’s exact initial timestamp/price, share convention, residual cash, costs, first return, and final valuation.
+* Whether maximum drawdown uses daily closing equity and includes the initial $100,000 equity point.
+
+Include the main formulas for daily close returns, sample volatility, position sizing, net trade P&L, portfolio returns, annualized return, annualized volatility, Sharpe, and drawdown. Define symbols and units.
+
+Continue to label the implementation as an adaptation where data limitations prevent exact replication.
+
+## 6. Present the data audit and robustness evidence
+
+Bring the seven volume-reconciliation discrepancies into the report or appendix. Show date, intraday total, daily total, difference, and treatment. Obtain these from the actual audit and workbook.
+
+Explain why volume discrepancies did or did not affect trading-time VWAP. Keep observed facts separate from inferences about how closing residuals were constructed.
+
+Clarify half-day cleaning: post-close rows were removed from trading and afternoon history; usable morning observations were retained.
+
+Provide a compact robustness table covering all settings actually tested, including:
+
+* Band lookbacks.
+* Band multipliers.
+* Exposure caps.
+* Slippage levels.
+* Delayed execution.
+* Band-only versus band-plus-VWAP exits.
+* Through-November versus full-sample results.
+
+Show sample dates/counts and distinguish comparisons on different windows. Include total return, Sharpe, and maximum drawdown where available. Do not silently omit unfavorable tested results.
+
+Keep headline parameters unchanged. Describe sensitivity findings as exploratory, not validated parameter selection.
+
+## 7. Finish the strategy assessment and paper critique
+
+Ensure every Step 3.3 and Step 3.4 question receives a direct answer. Retain the existing useful discussion and replace shorthand with clear explanations.
+
+For course connections, search only the course materials actually supplied in this project. Add concrete references and explain the connection. Do not invent lectures, assigned readings, or what the instructor has covered.
+
+If no relevant course materials are available, finish all other work and ask me one focused question requesting the lecture topics or readings needed. Keep that outstanding item explicit rather than claiming the assignment is fully complete.
+
+Support paper-specific criticisms with page, section, or table references. Explain both what the paper does well and what evidence would make its claims more convincing.
+
+Avoid suggesting irrelevant statistical procedures merely to sound rigorous. For example, do not recommend Diebold–Mariano tests unless a clearly defined forecast-comparison problem justifies them.
+
+## 8. Produce a finished, readable submission
+
+Keep the first-page summary covering all four Step 3 deliverables.
+
+Embed, rather than merely list paths to:
+
+* A normalized wealth comparison.
+* A drawdown comparison or clearly labeled strategy drawdown.
+* One annotated real trading-day example.
+
+Use captions explaining what each figure demonstrates. Ensure figures and reported numbers come from the same final run.
+
+Use at least five decimal places for computed numerical answers where appropriate, drawing from full-precision outputs. Do not manufacture precision by padding previously rounded numbers. Dates, counts, parameter labels, and historical quotations need sensible formatting rather than automatic decimal padding.
+
+Replace instructions such as “Do not difference” with descriptions such as “We treated the volume observations as interval amounts.” Remove drafting comments and unresolved placeholders from completed sections.
+
+Use “Young Kim” as the known student name. Do not invent additional group members or contributions; ask whether there are coauthors if that remains necessary.
+
+Record an actual results-generation timestamp. Improve the reproduction instructions to include dependency installation and the required input location, rather than assuming an existing virtual environment.
+
+Produce:
+
+1. Revised report source.
+2. A rendered PDF with readable equations, tables, figures, and page breaks.
+3. Included prompt transcript, development history, verification evidence, and supporting outputs referenced by the report.
+4. A concise assignment-compliance checklist.
+
+Inspect the PDF and fix clipped tables, broken equations, missing images, and illegible labels. Keep lengthy evidence in appendices so the main report stays focused.
+
+## 9. Final checks and response
+
+Run the analysis and relevant tests after all necessary fixes. Check agreement among the executive summary, tables, figures, and prose. Preserve an honest record of any changed metrics.
+
+Your final response should state:
+
+* What was corrected.
+* Whether code changes altered results.
+* Verification results and limitations.
+* Where the final report and supporting materials are located.
+* Any specific information still needed from me.
+
+Do not claim the work is fully verified merely because the code runs or the strategy is profitable. Complete everything supported by the available project, and identify genuinely missing evidence without inventing it.

@@ -1,0 +1,8 @@
+topic,paper,this_replication,impact
+Opening price,True 09:30 open O_d,First regular bar endpoint as open_proxy (available at 10:00 under bar-start shift),Adaptation; gap adjustment spans overnight + first 30m; first entry ordinarily at 10:30 availability
+Timestamp convention,Semi-hourly decisions at HH:00/HH:30 with 1-minute data,Inferred bar-start labels; availability = label+30m,Idealized endpoint execution; unresolved if labels are bar-end
+VWAP,VWAP from market-hours trade data,Endpoint-weighted proxy using interval volumes × endpoint prices,Approximation; band-only diagnostic included
+Volume field,Trade volume for VWAP,"Volume, AV treated as per-interval (not cumulative)",Supported by within-session decreases; 16:00 residual excluded from VWAP
+B/C entry with VWAP,"Enter on band break; stop = max/min(band, VWAP)",Operational entry requires price beyond stop threshold to avoid instant exit,Documented interpretation of combined conditions
+Benchmark,SPY buy&hold (total vs price return not fully specified in main tables),Buy-and-hold on supplied Last Price series; adjustment/dividend basis unverified,Described as price-series return until verified
+Sample period,May 2007–Apr 2024 (headline),2025-04-02 to 2025-12-01 after warm-up (~8 months instructor data),Cannot reproduce headline 19.6%/1.33 Sharpe; limited subgroup power

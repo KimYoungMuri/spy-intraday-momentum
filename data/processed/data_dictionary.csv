@@ -1,0 +1,9 @@
+field,definition
+session_date,US equity session calendar date (America/New_York wall date)
+clock_label,Original workbook time label (inferred bar-start)
+available_at,Information availability time = clock_label + 30 minutes for regular bars
+price,Last Price at bar endpoint (workbook Last Price)
+interval_volume,"Per-record volume from Volume, AV; NOT differenced"
+open_proxy,First regular bar endpoint price; NOT a verified 09:30 open
+session_close_price,Liquidation price at actual session close (13:00 half-day / 16:00 full)
+is_half_day,True for 2025-07-03 and 2025-11-28

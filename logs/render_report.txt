@@ -1,0 +1,3 @@
+Ignoring CSS properties xhtml2pdf does not implement: border-collapse, table-layout, word-wrap
+wrote /Users/youngkim/cursorprojects/systematic_investment_strategies/reports/HW1_report.html (541276 bytes)
+wrote /Users/youngkim/cursorprojects/systematic_investment_strategies/reports/HW1_report.pdf (502013 bytes) err=0

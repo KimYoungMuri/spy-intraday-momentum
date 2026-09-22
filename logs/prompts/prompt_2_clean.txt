@@ -1,0 +1,498 @@
+ou are my AI coding and quantitative-research assistant for B9339 Systematic Investment Strategies, Professor Achilles Venetoulias, Fall 2026, Homework Assignment #1. Complete the implementation, verification, empirical analysis, and a polished, evidence-backed draft write-up. This is an academic replication exercise explicitly requiring AI-generated code. Success means a correct, reproducible and critically assessed experiment, whether the strategy makes or loses money.
+
+Read this entire prompt and both PDFs before implementing anything. Follow the homework PDF as the authority for assignment requirements and the attached paper as the authority for strategy definitions. Treat my specifications below as the intended scope and safeguards; identify and explain any conflict with the source documents rather than silently resolving it. Work through the task to completion, run the code and checks, inspect outputs, and correct actual errors. Do not stop at a plan or a scaffold. Do not place trades or connect a brokerage account.
+
+1. Inputs and assignment requirements
+
+Expected inputs in this workspace:
+
+hw1 (1).pdf: the complete assignment.
+
+ZarattiniAzizBarbon.202509.BeatTheMarketAnEffectiveIntradayMomentumStrategyForS&P500ETF(SPY).pdf: the September 22, 2025 version of the paper.
+
+hw1.spy.20250313-20251201.intra-30m.xlsx: the instructor's Bloomberg data. The assignment describes approximately March–November 2025 SPY ending prices and accumulated volumes at 30-minute intervals. Inspect the actual workbook; its filename is not sufficient evidence of its contents, date coverage, or timestamp semantics.
+
+Any additional course materials or notes I have actually supplied.
+
+Find these inputs recursively without modifying originals. If the workbook is missing, tell me the exact missing filename immediately, continue with source analysis, implementation and explicitly synthetic unit tests, and leave empirical outputs blocked until real data are supplied. Never substitute synthetic data, daily data, or an unrelated dataset and present it as the required empirical analysis. Do not fabricate results to make the report appear complete.
+
+The assignment requires:
+
+AI-generated implementation; disclose the chosen platform and why.
+
+Independent verification of correctness, which may use manual calculations, an independently written checker, another AI, or authors' code only for checking/correcting the AI-generated implementation.
+
+An explained selection of which parts of the paper to replicate and omit.
+
+Testing on real data; identifying and reporting actual or suspected data anomalies; handling the July 3 and November 28, 2025, 13:00 closes.
+
+Detailed documentation of prompts, iterations, corrections and implementation accuracy.
+
+Results, relevant comparative statistics, robustness, and discussion of how the available data constrain the replication choices.
+
+Assessment of the strategy and a critical review of the paper, answering every question in Step 3.
+
+A first-page summary covering all four Step 3 deliverables; explained formulas and assumptions sufficient for a classmate to reproduce the work from the write-up.
+
+At least five decimal places for numerical answers where appropriate. Use full precision internally and sensible units. Counts and dates need not have decimals. Five-decimal display is not evidence of statistical precision.
+
+Clear, organized software output, with row and column headings in spreadsheet printouts, if used.
+
+One write-up for a group of at most three. Do not invent group members, identities or contributions; leave those fields for me to fill in.
+
+2. Provenance and a truthful AI-process record
+
+Use Python for a transparent local research project. Explain the choice: Python supports Excel ingestion, inspectable data transformations, numerical analysis, testing and reproducible plots; Cursor supports code generation, file editing, execution and iterative debugging in one workspace. These are reasons for the chosen workflow, not claims that Cursor is objectively the best platform.
+
+Generate the main implementation yourself from the paper. Do not download and use the authors' implementation as the primary replicator, copy an existing strategy repository, or merely wrap someone else's backtester. If authors' code is later consulted for verification, retain citations, explain precisely what was compared and changed, and keep its verification role distinct from the primary implementation. An independent small reference implementation and worked arithmetic checks are sufficient; external authors' code is not mandatory.
+
+From the beginning, keep:
+
+This exact initial prompt and all subsequent user prompts actually available to you.
+
+Platform, model name/version if actually visible, date, Python version and dependencies. Mark unknown model details as unknown rather than guessing.
+
+A chronological experiment and correction log: what was attempted, observed output or error, diagnosis, actual correction, test evidence, and resulting change in metrics if applicable.
+
+The initial working implementation and final implementation, using snapshots or local git commits if appropriate. Do not overwrite the only evidence of the first working version.
+
+A record of data conventions, assumptions, deviations from the paper, and source citations/page references.
+
+Do not manufacture a history of failed prompts or fixes, claim manual checks were performed by me, claim a second AI reviewed the code unless one actually did, or write that I personally verified something I have not reviewed. Label AI-performed arithmetic checks and AI-generated prose accurately. Preserve the fact that this initial prompt was prepared with ChatGPT from the homework and paper; the coding platform for the replication is Cursor. Do not invent the model used by ChatGPT. Leave a short final checklist of any student-specific facts, class connections and judgments needing my confirmation.
+
+3. Replication scope and rationale
+
+Replicate these three nested variants on identical evaluation dates:
+
+A. Original breakout strategy: time-of-day noise bands, long/short entries, opposite-band exit/reversal, 1× beginning-of-day equity exposure.
+
+B. Improved exits: same noise-band idea, exit at the current-direction band or session VWAP, 1× exposure.
+
+C. Improved exits plus dynamic sizing: B with trailing daily-volatility-based sizing, 2% daily underlying-volatility target and a 4× exposure cap.
+
+This isolates the paper's two main improvements: exit design and leverage adjustment. Include SPY buy-and-hold as the main benchmark over matched dates and explicitly identify its price-return or total-return basis.
+
+Prioritize these core variants, correctness, execution/VWAP sensitivity, costs, and a small predeclared parameter analysis. Do not turn this homework into a search for the most profitable parameter combination.
+
+Omit from the core replication the full daily-candlestick-pattern study, direct dealer-gamma modeling, broad cross-asset backtests, and exhaustive VIX/weekday filters. Explain each exclusion: 30-minute endpoints do not reconstruct true daily highs/lows; actual gamma requires options positions/exposure assumptions and additional data; VIX and other markets are absent unless supplied; eight months offers limited subgroup power. A weekday descriptive table or five-day RSI relationship may be an optional appendix only after required work is complete. If using RSI, label it as a price-based proxy and do not present it as measured dealer gamma. Never infer historical highs and lows from endpoints and call them actual OHLC data.
+
+4. Audit the workbook before designing the backtest
+
+Inspect sheets, headers, metadata, cell types, date/time layout, hidden assumptions and sample records. Build a data dictionary and preserve raw-to-clean row provenance. Document:
+
+Actual first/last date, session count, rows per session, timestamp timezone, bar start/end convention, price meaning, volume meaning, and availability of genuine opening and previous-session closing prices.
+
+Duplicate and conflicting timestamps, unsorted records, missing bars, nontrading dates, out-of-session records, missing/nonpositive prices, nonfinite values, negative/zero volume, nonmonotonic cumulative volume, stale prices, suspicious jumps and inconsistent session endpoints.
+
+Whether volume is an interval amount or a cumulative session total. Use labels/metadata and observed behavior; do not infer solely because values look plausible. If ambiguous, document the evidence and alternative treatment.
+
+Whether raw prices are adjusted/unadjusted, whether dividends/corporate actions are documented, and whether supplemental data would be consistent. Do not quietly splice adjusted daily prices into unadjusted intraday prices.
+
+Standard US equity sessions in America/New_York and the special 13:00 closes on 2025-07-03 and 2025-11-28. Account for daylight saving time if timestamps are UTC. Use a suitable exchange calendar where available, with these dates explicitly verified. Do not use a fixed UTC offset or treat every weekday as a full session.
+
+Keep a table with anomaly date/time, observed issue, evidence, resolution and impact. Distinguish a suspicious but genuine market move from a verified bad print. Do not delete large moves merely because they hurt performance. Deduplicate only with explicit rules. Never silently forward-fill missing tradable prices, synthesize a 16:00 close on a half-day, or mark missing data as a flat zero-return day.
+
+Define a conservative policy for incomplete sessions and show sensitivity if exclusions are material. Daily close observations may still be valid for close-to-close volatility even when intraday data are incomplete; distinguish the daily series from the strategy session-eligibility series. Do not bridge unaccounted multiday price gaps and label them one-day returns. Explain the performance calendar when sessions are excluded and distinguish known cash days from unknown P&L.
+
+Opening prices and warm-up
+
+The paper requires the 09:30 open. A 10:00 interval-ending price is not the opening price. A record labeled 09:30 may itself have ambiguous meaning; inspect rather than assume. If the true open is unavailable, first check whether another sheet supplies it. Otherwise report the limitation and either use a clearly disclosed, consistently sourced supplemental open or implement a separately labeled approximation. Do not claim exact replication when substituting the first observed endpoint for the open. Replacing the open changes the signal definition, not just a minor data detail.
+
+Require 14 prior valid trading sessions for the band estimate and 14 prior daily close-to-close returns for sizing; the latter generally requires 15 closing observations. Specify the additional previous close needed on the first trading day. Do not use future rows to initialize early signals. Report warm-up losses and the resulting common evaluation start date. Supplemental prehistory may be used if legitimately available, consistently defined, cited and included with the submission; do not let a paid-data requirement block the core homework.
+
+For time-of-day band history, specify how half-days or missing historical endpoints affect the 14-session window. Preserve the intended last-14-trading-session definition where possible. If using the last 14 available observations at a given clock time, identify it as a deviation that can span more than 14 sessions. Compare a reasonable alternative if this affects results. Never interpolate unobserved afternoon prices on half-days.
+
+4A. Workbook-specific findings and implementation overrides
+
+The actual workbook has now been inspected. The following findings supersede generic possibilities elsewhere in this prompt. Reproduce these checks in your own audit, retain the distinction between observations and interpretations, and log this supplied audit as input from ChatGPT, not as discoveries you independently made before receiving it.
+
+Sheet selection and coverage
+
+Sheet
+
+Observed contents
+
+Role
+
+AV.Clean
+
+Columns A:C: Time Stamp, Last Price, Volume, AV; 2,544 data rows, newest first
+
+Main supplied cleaned intraday source, subject to the issues below
+
+BBRG.Intraday
+
+Columns B:D: timestamp, last price, volume; 2,542 data rows, newest first; an additional SMAVG (15) column
+
+Raw comparison and provenance; do not use its moving-average column as a strategy indicator
+
+BBRG.Daily
+
+Columns B:D: timestamp, last price, volume; 197 daily observations, newest first
+
+Prior close, daily-volatility prehistory, close/volume reconciliation and benchmark support
+
+Intraday coverage is March 13–December 1, 2025 inclusive, with 182 distinct session dates. Daily coverage begins February 20, 2025 and includes 15 dates before the intraday sample. Sort each dataset ascending before computing lags, cumulative sums, differences or rolling windows. Include December 1 in the full supplied-data analysis and state this explicitly, notwithstanding the assignment's approximate March–November description. If useful, show a through-November sensitivity rather than quietly dropping December 1.
+
+The 180 ordinary sessions have all 14 recorded clock labels from 09:30 through 16:00 at 30-minute intervals. The two half-days have 12 rows each. The audit found no duplicate intraday timestamps, missing/nonpositive prices or negative volumes, and every daily date within the intraday span is represented. These checks do not establish that timestamps and volume allocation are economically correct.
+
+Volume is not a running cumulative total
+
+Volume, AV repeatedly decreases as the day progresses. For example, on December 1, the recorded 09:30 row has 6,398,375 shares and the 10:00 row has 3,953,647. There are 1,181 within-session decreases across the file. Treat regular intraday volumes as per-record/interval amounts, not cumulative session totals. Do not difference this column. Accumulate eligible interval volumes yourself when constructing the endpoint-weighted VWAP proxy.
+
+The closing rows need separate treatment. Compared with the raw sheet, the cleaned sheet changes or adds 176 records, all timestamped 16:00. On 175 of 182 sessions, the sum of all cleaned volumes exactly equals the daily volume, and the 16:00 value equals daily volume minus the sum of earlier records. This strongly suggests a volume-reconciliation residual; it is not proof that all that volume actually traded in a final interval or closing auction. No explanatory cell formulas/comments identify its construction. Retain it for auditing and do not back-allocate it into earlier intraday VWAPs. Use ordinary pre-close bar volumes for trading-time VWAP. At the close, flatten regardless of VWAP, so an unverified closing residual need not affect any new signal.
+
+Seven dates fail the all-row volume reconciliation. Record these observed values exactly, investigate, and do not silently manufacture interval allocations:
+
+Date
+
+Sum of AV.Clean volume
+
+BBRG.Daily volume
+
+Sum minus daily
+
+2025-03-13
+
+77,456,149
+
+74,079,416
+
++3,376,733
+
+2025-04-17
+
+40,044,740
+
+79,868,080
+
+-39,823,340
+
+2025-04-23
+
+61,312,864
+
+90,590,656
+
+-29,277,792
+
+2025-04-25
+
+37,455,103
+
+61,119,592
+
+-23,664,489
+
+2025-05-09
+
+24,629,063
+
+37,603,428
+
+-12,974,365
+
+2025-09-22
+
+48,564,894
+
+69,452,200
+
+-20,887,306
+
+2025-11-03
+
+41,710,084
+
+57,315,024
+
+-15,604,940
+
+The March 13 excess exactly equals its first recorded volume. This is consistent with that first record being omitted when deriving a balancing residual, but do not present the construction as proven. On the other six dates, the raw 16:00 volume is nonzero and is unchanged in the cleaned sheet; that is relevant evidence, not proof of which trading intervals are missing volume. Keep usable price history unless there is a separate price defect. Explain why closing-volume discrepancies may have little effect on pre-close signals if they concern only an unused closing residual; do not automatically discard these entire dates or assume the discrepancy is harmless.
+
+Early-close rows are not tradable afternoon observations
+
+On both July 3 and November 28, the recorded labels are 09:30, 10:00, 10:30, 11:00, 11:30, 12:00, 12:30, 13:00, 14:00, 15:00, 15:30 and 16:00. Prices are repeated after the close. Volumes at 13:00, 14:00, 15:00 and 15:30 are zero. The 16:00 cleaned rows contain 18,991,361 shares on July 3 and 17,387,935 on November 28, despite the actual 13:00 market close.
+
+Remove post-13:00 labels from tradable data and afternoon band-history observations. Preserve the raw rows and audit them. Do not relabel these volume residuals as real 13:00 trades or infer an extra afternoon session. Use the closing price at the real session close and flatten once. Under the inferred bar-start convention below, the 12:30 regular bar ends at 13:00; the 13:00/16:00 repeated-price records must not become additional half-hour returns or trades.
+
+Timestamp interpretation and the missing true open are the main limitations
+
+There is no explicit opening-price field in any of the three sheets. All price columns are Last Price. There is no authoritative timezone/bar-label explanation in the sheet headers or cell comments.
+
+The pattern strongly suggests bar-start labels for regular 30-minute bars: the 15:30 price equals the separate 16:00 closing price on 121 of 182 dates (including the half-days' stale records), and most remaining differences are small; on both half-days the 12:30 price already equals the 13:00 close. The large 09:30 volume and separate closing records are also consistent with this interpretation. These are internal indications, not authoritative Bloomberg metadata.
+
+Seek any available instructor/vendor clarification. If no authoritative clarification is available, use the inferred bar-start convention as the main conservative timing assumption: regular rows labeled 09:30 through 15:30 become observations available at 10:00 through 16:00, and half-day regular rows labeled 09:30 through 12:30 become available at 10:00 through 13:00. Do not mechanically shift the special closing/stale rows into 16:30 or a nonexistent afternoon session. Preserve original labels separately from availability times. At the terminal endpoint, resolve the final regular-bar price versus the separate closing print consistently; use the closing print for final liquidation and do not create an extra half-hour holding period between two observations available at the close. State that idealized close execution still has the limitations described in Section 6.
+
+Do not use the row labeled 09:30 as a verified 09:30 opening price. Under the main timing assumption it is the first bar's ending price, known at 10:00. Do not compute a signal using that value and pretend it was available earlier. Simply shifting positions one row later does not fix an opening-anchor error.
+
+Preferred exact-anchor route: obtain genuine same-session opens from a documented, consistently adjusted source if available without an undue data-access barrier, and include that supplemental data in the submission. Check price-adjustment compatibility before joining. The daily sheet has closes, not opens, and cannot supply this field.
+
+Workbook-only fallback: complete a clearly labeled 10:00-anchored adaptation, treating the first regular bar's endpoint as the anchor for all historical/current-day band calculations and share sizing. First possible entry is the next available regular endpoint, ordinarily 10:30. Keep the prior-close gap adjustment but explain that it now spans both overnight and the first half-hour. This must be described as an adaptation of the paper, not an exact reproduction of its opening-price rule. Implement the paper's true-open interface so verified opens can replace the proxy without redesigning the project. Apply the same anchor convention to A/B/C for comparability. This explicit fallback supersedes instructions elsewhere that assume a genuine opening price or a 10:00 first entry. It permits completion of the homework using the supplied file without inventing missing opens.
+
+If showing an unshifted endpoint-label interpretation, label it an unresolved timestamp sensitivity that may be anticipative if the main interpretation is correct. It must not be presented as an equally verified live-executable strategy. Separately retain the one-observation execution-delay stress after the chosen availability convention; timestamp correction and additional execution delay are different operations.
+
+Daily data, warm-up and price consistency
+
+Use the daily sheet's actual prehistory to initialize lagged daily volatility and prior closes; do not throw it away by reading only AV.Clean. It contains enough closes for 14 prior daily returns on the first intraday date. Intraday bands still require 14 prior intraday sessions: with all relevant initial sessions usable, their earliest eligible date is April 2, 2025, leaving 168 session dates through December 1. A 20-session band lookback begins April 10, leaving 162 dates. These are expected counts before any later exclusions, not promises that every subsequent afternoon band is fully populated after a half-day. Show the core A/B/C comparison on its common eligible period and compare lookback sensitivities on a separately matched period.
+
+Every intraday 16:00 closing price agrees with its daily-sheet counterpart to within $0.0003, though only 73 match exactly. Treat this as a small numerical consistency issue, not 109 missing/invalid closes. Use a disclosed tolerance and one consistent choice of daily close series. Multi-decimal historical prices suggest possible price adjustment, but the workbook does not establish the adjustment policy. Do not assume unadjusted prices or add cash dividends again without establishing whether they are already reflected. Describe the benchmark as return on the supplied price series until its adjustment basis is verified, and flag dollar-cost/share-count implications if prices are adjusted rather than historical executable dollars.
+
+The final write-up should explicitly distinguish these observed issues, our inferences about their causes, and the assumptions used to proceed. The workbook is usable for the assignment, but its availability timing, opening anchor and approximate VWAP must be disclosed as replication limitations.
+
+5. Mathematical strategy specification
+
+Use trading-session index d and intraday endpoint h. Let O_d be the true session open, C_(d-1) the previous session close, P_(d,h) the observed endpoint price, and E_(d-1) the strategy's prior end-of-day equity.
+
+For each of the preceding 14 sessions:
+
+a_(d-i,h) = abs(P_(d-i,h) / O_(d-i) - 1)
+m_(d,h) = mean(a_(d-1,h), ..., a_(d-14,h))
+U_(d,h) = max(O_d, C_(d-1)) * (1 + VM * m_(d,h))
+L_(d,h) = min(O_d, C_(d-1)) * (1 - VM * m_(d,h))
+
+Default VM = 1. The paper's intraday sigma is an average absolute move, not a standard deviation, normal-distribution confidence band, ATR, or Bollinger Band. Keep it separate from the daily return standard deviation used for leverage. All historical calculations must be lagged so day d cannot enter its own estimates.
+
+Evaluate signals at HH:00 and HH:30 during the session, with first ordinary decision at 10:00 and no new position at the closing timestamp. Flatten by the actual session close, including 13:00 on half-days.
+
+Variant A: From flat, go long if P > U or short if P < L; otherwise remain flat. Keep an existing long through the noise area until P < L, then close/reverse to short. Keep a short until P > U, then reverse to long. Returning inside the area alone does not close variant A. Otherwise close at the session close.
+
+Variant B/C: The stop thresholds are:
+
+long_stop_(d,h) = max(U_(d,h), VWAP_(d,h))
+short_stop_(d,h) = min(L_(d,h), VWAP_(d,h))
+
+Exit a long when P falls below its threshold; exit a short when P rises above its threshold. These thresholds are recalculated from the current band and VWAP at each decision time. Do not add an unrequested running maximum/minimum ratchet or an intrabar stop. The paper calls these trailing stops, but the stated formulas do not automatically impose a monotonic ratchet.
+
+Write an explicit state-transition table for flat/long/short covering entries, holding, exits, reversals, re-entry and exact equality. Entry when price is outside a band but already beyond the proposed stop is potentially ambiguous in prose: explicitly resolve it before running results. A coherent main convention is long eligibility P > max(U,VWAP), short eligibility P < min(L,VWAP), otherwise flat for B/C. Identify this as the operational interpretation of the paper's combined entry/exit conditions, rather than pretending the prose contains an unambiguous independent VWAP entry filter. If a band-only entry followed by exit evaluation leads to different trades, explain and quantify that sensitivity. Avoid same-timestamp entry/exit loops or unintentional pyramiding. Use strict entry comparisons and document equality handling for stops; assess it only if observed equalities make it material.
+
+VWAP under coarse sampling
+
+If volume is cumulative session volume A_(d,h), first difference it within each session to recover interval volume v_(d,h). Treat the initial record consistently with whether it includes an opening auction, premarket volume or an initial cumulative amount. Do not difference across sessions. If the column is already interval volume, do not difference it again.
+
+With only endpoint prices and interval volumes:
+
+VWAP_proxy_(d,h) = sum_{j<=h}(P_(d,j) * v_(d,j)) / sum_{j<=h}v_(d,j)
+
+This is an endpoint-weighted approximation. Exact VWAP requires underlying trade values or suitable finer data; cumulative share volume alone does not provide it. Do not use the final day's VWAP at earlier times or double-count cumulative volume as interval volume. Define zero-denominator behavior. Include a current-band-only exit comparison to show dependence on this approximation; label it a diagnostic variation, not the paper's final rule. Use true supplied VWAP or finer data if genuinely available and explain the difference.
+
+Sizing
+
+Compute daily returns from prior session closes:
+
+r_j = C_j / C_(j-1) - 1
+sigma_d = sample_std(r_(d-14), ..., r_(d-1), ddof=1)
+exposure_d = min(4, 0.02 / sigma_d)
+shares_d = floor(E_(d-1) * exposure_d / O_d)
+
+For A/B, replace exposure_d by 1. Daily sigma is not annualized in this expression; 2% is not 2% annualized. Handle zero, missing or invalid sigma explicitly. Determine shares at the start of the day and keep this quantity fixed across that day's trades; do not inadvertently resize after every trade or with current-day closing information. Explain that changing intraday prices can alter effective notional exposure even with a fixed share count, and that the rule does not guarantee a realized strategy-volatility target.
+
+6. Timing, execution, P&L and costs
+
+Separate signal timestamp, information available, order timestamp, fill convention and return interval. The 30-minute workbook cannot establish actual instantaneous fills or intrabar execution.
+
+Main convention: observe the endpoint at h, assume a fill at that endpoint with an explicit modeled execution cost, and earn only subsequent price changes. Label this an idealized endpoint execution approximation; do not call it demonstrably attainable. Never apply a newly observed signal to the price change that created that signal.
+
+Sensitivity: delay the order until the next observed endpoint and then earn returns only after that fill. Label this a severe 30-minute execution-delay stress, not a realistic estimate of subsecond latency. Cancel queued entries that would fill at the session close and preserve closing liquidation. Do not relabel an old endpoint as the next bar open if the workbook lacks opens.
+
+Start each strategy with $100,000. Maintain a signed-share/cash/equity ledger or equivalent explicit event accounting. At a fill q_old -> q_new, traded quantity is abs(q_new - q_old). A +Q to -Q reversal therefore transacts 2Q. Charge entries, exits, reversals and forced closing liquidations. Do not charge a new order when a position is simply held.
+
+Baseline paper assumptions:
+
+Commission = $0.0035 per share per side.
+
+Slippage = $0.001 per share per side.
+
+Total linear modeled cost = $0.0045 times shares transacted.
+
+Either adjust fill prices for slippage or deduct slippage explicitly, but never both. Treat these as the paper's assumptions, not current broker quotes. Disclose omitted spread, minimum commissions, exchange/regulatory fees, borrow availability/fees, financing and market impact. Avoid double-counting the spread if the slippage assumption is intended to cover it. Model more detailed costs only if the necessary assumptions are explicit; do not invent a broker schedule.
+
+Positions must be flat overnight. Calculate daily portfolio returns from end-of-day equity including all costs, and reconcile trade P&L to daily and cumulative equity. Retain gross and net results. Cash has zero return in the core backtest unless an explicitly sourced alternative is supplied; state the risk-free assumption used for Sharpe and regression.
+
+7. Verification: demonstrate accuracy independently of profitability
+
+Write meaningful deterministic tests and an independently structured small checker. Comparing two wrappers around the same functions is not independent verification. Include at least:
+
+Hand-worked arithmetic fixture for 14 historical absolute moves, both bands, and gap-up/gap-down adjustments.
+
+A fixture converting cumulative to interval volumes and calculating running VWAP without future data.
+
+Flat/long/short transitions, A holding inside the band, B/C stopping sooner, a reversal, equality rules, and re-entry.
+
+No-signal/constant-price behavior and valid handling of zero volatility or missing history.
+
+A sizing example with sample standard deviation, 2% target, share rounding and 4× cap.
+
+A round trip and reversal whose net dollar P&L, costs and end equity can be calculated separately.
+
+Correct 13:00 flattening on both named half-days, no later trades and no overnight position.
+
+An information-leakage test: alter observations strictly after a selected time and verify earlier features, signals and completed fills do not change. Alter current-day close and verify opening sizing remains unchanged.
+
+A timing test proving a new signal does not receive preceding-bar P&L.
+
+Missing-bar, duplicate-record, session-boundary and warm-up handling.
+
+Use synthetic data only for these explicitly labeled tests. Also select at least three real-data sessions, preferably covering a normal trading day, a stop/reversal day if present, and a half-day. Export a row-by-row trace showing price, interval/cumulative volume, VWAP, bands, known lagged estimates, target/held shares, order changes, fill prices, costs and P&L. Recalculate representative entries, sizing, exits and P&L independently. If no actual reversal occurs, use a clearly labeled synthetic reversal fixture rather than inventing one.
+
+Report checks run, pass/fail counts, numerical tolerances and any unresolved mismatch. A profitable equity curve is not evidence that code is correct. Do not require the 2025 sample to reproduce the paper's 2007–2024 headline metrics.
+
+8. Empirical evaluation and robustness
+
+Use a common evaluation window after the longest required warm-up. List all excluded dates and why. Keep ordinary eligible no-trade days in daily return statistics. Match the buy-and-hold entry price/date, final valuation and capital conventions; optionally add an unlevered open-to-close benchmark to separate intraday from overnight exposure.
+
+For A, B, C and SPY buy-and-hold, report with formulas and units:
+
+Evaluation dates, trading sessions and calendar span.
+
+Starting/final wealth and total compounded return.
+
+Annualized geometric return with its exact convention, plus the raw sample return prominently. If using (E_end/E_start)^(252/N)-1, state the trading-day convention and N.
+
+Arithmetic mean daily return; daily standard deviation and annualized volatility using sqrt(252).
+
+Sharpe = sqrt(252) * mean(daily excess returns) / sample_std(daily excess returns), with risk-free assumption and handling of zero volatility. Do not calculate Sharpe as CAGR divided by volatility without labeling that different convention.
+
+Maximum drawdown from the running equity peak, its dates and recovery status where meaningful; worst/best day and daily skewness with estimator convention.
+
+Winning-day fraction and winning-trade fraction separately, including their denominators and treatment of flat days/breakevens. Also report the fraction of days traded.
+
+Completed trade count, trades/day, average holding time, long/short contributions, average win/loss, payoff ratio, profit factor and net average P&L per share with an explicit weighting definition. Mark undefined statistics as N/A rather than forcing a number.
+
+Turnover, commissions, slippage, gross versus net performance, and exposure/leverage distribution for C. Do not compare leveraged returns without noting the leverage difference.
+
+Correlation and a daily strategy-return regression on SPY returns. Prefer a clearly stated excess-return regression if risk-free data are available; otherwise use zero risk-free consistently. Report alpha, beta, R-squared and uncertainty; use heteroskedasticity/autocorrelation-robust standard errors with disclosed lag choice if supported. Annualize the daily intercept transparently (e.g., 252 * alpha_daily), not by confusing it with CAGR. Near-zero beta does not make the strategy delta-neutral or riskless, and a one-factor alpha does not establish structural alpha.
+
+Create a compact set of readable figures: normalized wealth, drawdowns, monthly returns, selected-day price/band/VWAP/trade plots, and a small robustness comparison. Add a leverage plot if useful. Ensure titles, labels, units, legends and date ranges are unambiguous. Include July 3 and/or November 28 in validation evidence even if there were no trades.
+
+Predeclare a modest sensitivity grid and keep headline parameters fixed:
+
+Band lookback: 10, 14, 20 sessions, holding sizing lookback fixed at 14 to isolate effects.
+
+Band multiplier: 0.75, 1.00, 1.50, changing one parameter at a time around the main specification.
+
+Exposure cap: 1×, 2×, 4× for the volatility-sized variant with target held fixed.
+
+Execution costs: retain the baseline and stress slippage, for example $0.005 and $0.01 per share per side, while keeping commission fixed. Optionally estimate break-even additional cost per share, clearly distinguishing fixed-trade calculations from reruns with compounding and share rounding.
+
+Idealized endpoint fills versus one-observation delayed fills.
+
+Current-band-only exits versus current-band + approximate VWAP exits.
+
+If material, the chosen incomplete-session/half-day-history policy and a defensible alternative.
+
+Use matched dates for sensitivity comparisons, particularly across lookbacks. Avoid an exhaustive Cartesian grid. Report all tested settings, not only favorable results. Do not retrofit the strategy to this sample and report the optimized result as validation.
+
+As one modest improvement experiment, evaluate reduced leverage (e.g., 2× cap) as a risk-control change. Judge it on drawdown, volatility and risk-adjusted return as well as total return; it may help or hurt. Distinguish this from an implementation improvement such as correctly lagged indicators, cumulative-volume conversion, explicit state transitions, and stricter execution assumptions. Never claim a bug fix proves a novel trading edge.
+
+Discuss sampling uncertainty. Where feasible, add a seeded block bootstrap of the daily return series for mean return or Sharpe uncertainty, with block-length assumptions and limited precision explained. Treat it as an optional diagnostic, not proof of robustness. Clearly distinguish historical reproduction, post-publication dates, and genuine untouched out-of-sample validation. The data overlap the September 2025 paper update: later dates than the original May 2024 publication do not automatically make our entire researcher-selected experiment untouched out of sample. If choosing any new parameters from this dataset, use an explicitly chronological development/holdout split and preserve the holdout; otherwise call comparisons exploratory and state that no parameter was selected for claimed holdout performance.
+
+9. Written assessment — answer every homework question
+
+Organize the write-up around the four Step 3 deliverables, not merely code modules.
+
+Deliverable 1: AI development and accuracy
+
+Describe Cursor/Python choices; source interpretation; selected and omitted paper threads with reasons; exact prompt references; actual iterations, errors, corrections and verification evidence; what AI did well or poorly; and what still requires human review. Explain formulas in the prose rather than showing only code or numeric tables.
+
+Deliverable 2: Data and findings
+
+Describe Bloomberg/instructor provenance, actual coverage and fields, audit findings, cleaning rules, warm-up, half-days, open/VWAP/execution approximations, all main performance comparisons and robustness. Explain what the data enable and prevent. Separate expected methodological outcomes from results actually observed. Identify whether differences from the paper plausibly reflect the market period, coarse data, implementation conventions or cost assumptions; do not assert causality without evidence.
+
+Deliverable 3: Strategy assessment
+
+Answer explicitly:
+
+What is the economic hypothesis behind following unusually large intraday moves? Discuss persistent order flow/slow information incorporation as hypotheses, without claiming bands directly measure imbalance.
+
+What do the original rule, tighter stops and volatility sizing each accomplish? Explain whipsaws, loss truncation, turnover, leverage and the possibility of giving up rebounds.
+
+Is the strategy interesting or attractive, and for what investors? Discuss suitable quantitative capabilities, trading access, costs, supervision and capacity. Do not make unsupported suitability claims from eight months of results.
+
+Could it run on a laptop? Distinguish computational feasibility from reliable live operation: data quality, a clock/calendar, broker connection, shorting permissions, fills, monitoring, disconnect recovery and risk limits. Do not implement live trading for this assignment or quote current legal/broker requirements without verifying them.
+
+Which conditions are critical: trend persistence, liquidity, timely execution, costs, volatility regime, leverage and reliable data?
+
+Where should it work better or worse? Contrast persistent intraday trends with choppy/mean-reverting sessions, abrupt reversals and quiet days; distinguish hypotheses from observed subgroup evidence.
+
+How does it relate to course concepts? Use supplied course materials when available. Discuss time-series momentum versus cross-sectional momentum, dynamic exposure, volatility scaling, stop-loss rules, transaction costs, alpha/beta and backtest bias as conceptual links. Do not invent lectures or assigned papers. Mark course-specific references for my confirmation if none were supplied.
+
+Would applying the rule to another major market produce similar or different returns? Explain why local trading hours, auctions, liquidity, volatility, participants, hedging flows, costs and shorting constraints require a new empirical test. Do not promise transferability from SPY.
+
+What risks are underemphasized: stops only checked every 30 minutes, gaps between observations, volatility jumps after quiet periods when leverage is high, false breakouts, missing data, short constraints, costs/capacity, model selection and changing market behavior? A strategy flat overnight may avoid its own overnight exposure but does not automatically hedge an investor's overnight equity loss.
+
+What improvements are plausible? Separate demonstrated small experiments from untested ideas; show costs and trade-offs and acknowledge when a proposed change does not help.
+
+Deliverable 4: Critical review of the paper
+
+Assess interest, usefulness and realism independently of our sample profitability. Discuss:
+
+The transparent signal and the useful sequential comparison of exits and sizing.
+
+Why reported 19.6% annualized return / 1.33 Sharpe for the main May 2007–April 2024 backtest are historical reference values, not targets for our sample.
+
+The leverage contribution and fairness of benchmark comparisons; verify or qualify price-return versus total-return treatment rather than asserting an unsupported dividend treatment.
+
+Why the paper's average-absolute-move band is not a significance test or proven equilibrium region.
+
+Execution timing, VWAP/data resolution and realistic costs; the paper's small slippage experiment does not establish identical costs across all historical regimes and sizes. Acknowledge the later appendix's I-Star impact-model test rather than claiming no market-impact sensitivity exists.
+
+Pattern, weekday and volatility-conditioned results: sample sizes, overlapping groups, multiple testing, selection bias and conditional Sharpe interpretation. Significance against zero is not proof that a subgroup outperforms another subgroup.
+
+The RSI regression: RSI is not measured gamma, correlation is not causation, and proxy validity/confounders matter.
+
+Parameter stability is useful but a low parameter count does not eliminate research-selection or overfitting risk. Acknowledge post-publication updates, while distinguishing reported backtests from independently audited live returns.
+
+Actual textual/table inconsistencies only if verified in the PDF. For example, check the weekday discussion against Table 6's Monday t-statistic and stated significance threshold, and distinguish daily hit ratios from trade hit ratios. Do not count differences caused by clearly different appendix sample dates as errors.
+
+How to present the study better: explicit fill/state conventions, consistent periods/metric definitions, uncertainty, economic cost assumptions, out-of-sample protocol and a clear boundary between evidence and proposed mechanisms.
+
+Support paper-specific claims with section/page/table references and any external claims with actual consulted sources. Avoid unsupported promotional conclusions or claiming the strategy guarantees future returns.
+
+10. Project and submission deliverables
+
+Produce a modest reproducible project with:
+
+README.md: setup, exact run/test commands, input locations, dependencies, assumptions, data access and limitations.
+
+A requirements/environment file and a central configuration file containing all strategy and experiment parameters.
+
+Clearly separated ingestion/audit, features, strategy/state machine, execution/accounting, evaluation and reporting code. Prefer transparent code over a complex framework or a web app.
+
+Meaningful tests and small independent arithmetic/reference checks.
+
+A notebook or one-command analysis runner that reproduces the main results from the original workbook without hidden manual edits.
+
+Original input data retained unchanged, cleaned data, data dictionary, audit/anomaly report, assumptions/deviations table and inclusion/exclusion calendar. Include any supplemental dataset actually used with its source and acquisition details, subject to legitimate sharing constraints; disclose any constraint rather than silently omitting required data.
+
+A trade ledger, daily results for every strategy/benchmark, robustness tables, selected-day traces and plots. Keep machine-readable outputs at full precision and human-readable tables at at least five decimal places where appropriate.
+
+Prompt records, development/correction log and verification report.
+
+A clean report source in Markdown and, if supported, a readable PDF. Use the first page for the summary of all four required deliverables. Put long tables, code details and the exact prompt transcript in appendices so the main argument stays readable. If PDF generation is unavailable, provide a clean exportable HTML or Markdown version and explain the remaining export step.
+
+If producing an Excel results workbook, use informative sheet names, headers, units and print settings with row/column headings; explain main formulas in the report even if cells contain computed values.
+
+An assignment-compliance checklist mapping every Step 1(a–e), Step 2 requirement, Step 3(1–4) and introductory formatting instruction to an actual file/report section and completion status. Distinguish mandatory assignment requirements from our optional robustness extensions.
+
+All report numbers and plots must come from the saved executed results. Check that tables, prose and charts agree after the final rerun. Label comparisons to the paper with their different sample periods. Inspect the rendered report for clipped tables, illegible charts, missing equations, broken references and accidental placeholders.
+
+11. Work sequence and completion standard
+
+Read inputs; create the requirements map, scope, provenance log and assumption register.
+
+Audit the data and resolve material timestamp/open/volume issues explicitly.
+
+Implement all three variants and accounting with the stated conventions.
+
+Run independent numerical checks and tests; fix actual errors and record them.
+
+Run matched-sample core results and the predeclared sensitivity tests.
+
+Produce evidence-backed analysis, both critiques, figures and reproducibility files.
+
+Rerun from a clean process; reconcile results and inspect the final report.
+
+Use reasonable documented defaults for routine choices. Ask a focused question only when a missing input or genuinely unresolved ambiguity prevents a defensible result; continue all unblocked work. Do not quietly pretend exact replication where available data only support an approximation.
+
+Your final response should identify the produced files, exact commands to reproduce them, verification status, a compact results table if real data were available, the most important deviations/limitations, and the few factual or personal-review items I still need to supply. Never claim completion of empirical analysis without running it on the actual dataset.

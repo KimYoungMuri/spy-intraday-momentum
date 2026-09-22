@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+mpl_cache/
+reports/pdf_preview/
+*.egg-info/
+src/sis_hw1.egg-info/

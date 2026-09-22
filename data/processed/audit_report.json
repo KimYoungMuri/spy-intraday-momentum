@@ -1,0 +1,247 @@
+{
+  "summary": {
+    "sheets": [
+      "BBRG.Intraday",
+      "BBRG.Daily",
+      "AV.Clean"
+    ],
+    "intraday_rows": 2544,
+    "intraday_first": "2025-03-13",
+    "intraday_last": "2025-12-01",
+    "n_sessions": 182,
+    "daily_rows": 197,
+    "daily_first": "2025-02-20",
+    "daily_last": "2025-12-01",
+    "timing_convention": "bar_start_shifted (inferred, not authoritative Bloomberg metadata)",
+    "open_source": "first_bar_endpoint_proxy (workbook has no true open field)",
+    "volume_interpretation": "per-interval (not cumulative); evidence: frequent within-session decreases"
+  },
+  "chatgpt_supplied_checks": {
+    "bars_per_day_counts": {
+      "12": 2,
+      "14": 180
+    },
+    "half_day_bar_counts": {
+      "2025-11-28": 12,
+      "2025-07-03": 12
+    },
+    "n_duplicate_timestamps": 0,
+    "n_nonpositive_prices": 0,
+    "n_negative_volumes": 0,
+    "within_session_volume_decreases": 1181,
+    "volume_recon_fail_dates": [
+      {
+        "date": "2025-03-13",
+        "sum_av_clean": 77456149.0,
+        "daily_volume": 74079416.0,
+        "diff": 3376733.0
+      },
+      {
+        "date": "2025-04-17",
+        "sum_av_clean": 40044740.0,
+        "daily_volume": 79868080.0,
+        "diff": -39823340.0
+      },
+      {
+        "date": "2025-04-23",
+        "sum_av_clean": 61312864.0,
+        "daily_volume": 90590656.0,
+        "diff": -29277792.0
+      },
+      {
+        "date": "2025-04-25",
+        "sum_av_clean": 37455103.0,
+        "daily_volume": 61119592.0,
+        "diff": -23664489.0
+      },
+      {
+        "date": "2025-05-09",
+        "sum_av_clean": 24629063.0,
+        "daily_volume": 37603428.0,
+        "diff": -12974365.0
+      },
+      {
+        "date": "2025-09-22",
+        "sum_av_clean": 48564894.0,
+        "daily_volume": 69452200.0,
+        "diff": -20887306.0
+      },
+      {
+        "date": "2025-11-03",
+        "sum_av_clean": 41710084.0,
+        "daily_volume": 57315024.0,
+        "diff": -15604940.0
+      }
+    ],
+    "close_abs_diff_max": 0.0003000000000383807,
+    "close_exact_matches": 73,
+    "close_within_0003": 175,
+    "n_close_comparisons": 182,
+    "pct_1530_equals_1600": 0.6648351648351648,
+    "n_1530_1600_pairs": 182
+  },
+  "anomalies": [
+    {
+      "date": "2025-07-03",
+      "time": null,
+      "issue": "early_close_stale_afternoon_labels",
+      "evidence": "labels=['09:30:00', '10:00:00', '10:30:00', '11:00:00', '11:30:00', '12:00:00', '12:30:00', '13:00:00', '14:00:00', '15:00:00', '15:30:00', '16:00:00']; post-13:00 volumes=[0, 0, 0, 18991361]; prices=[622.514, 623.262, 623.5711, 623.6609, 624.1645, 624.0049, 623.611, 623.611, 623.611, 623.611, 623.611, 623.611]",
+      "resolution": "Remove labels after real 13:00 close from tradable/band-history; flatten at 13:00 using closing print",
+      "impact": "Prevents phantom afternoon returns and trades on half-days",
+      "severity": "critical"
+    },
+    {
+      "date": "2025-11-28",
+      "time": null,
+      "issue": "early_close_stale_afternoon_labels",
+      "evidence": "labels=['09:30:00', '10:00:00', '10:30:00', '11:00:00', '11:30:00', '12:00:00', '12:30:00', '13:00:00', '14:00:00', '15:00:00', '15:30:00', '16:00:00']; post-13:00 volumes=[0, 0, 0, 17387935]; prices=[681.265, 681.695, 682.47, 682.1499, 682.72, 682.22, 683.39, 683.39, 683.39, 683.39, 683.39, 683.39]",
+      "resolution": "Remove labels after real 13:00 close from tradable/band-history; flatten at 13:00 using closing print",
+      "impact": "Prevents phantom afternoon returns and trades on half-days",
+      "severity": "critical"
+    },
+    {
+      "date": "2025-03-13",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=77456149, BBRG.Daily=74079416, diff=3376733",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-04-17",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=40044740, BBRG.Daily=79868080, diff=-39823340",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-04-23",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=61312864, BBRG.Daily=90590656, diff=-29277792",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-04-25",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=37455103, BBRG.Daily=61119592, diff=-23664489",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-05-09",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=24629063, BBRG.Daily=37603428, diff=-12974365",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-09-22",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=48564894, BBRG.Daily=69452200, diff=-20887306",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-11-03",
+      "time": null,
+      "issue": "volume_reconciliation_mismatch",
+      "evidence": "sum_AV.Clean=41710084, BBRG.Daily=57315024, diff=-15604940",
+      "resolution": "Keep price history; do not back-allocate residual; document only",
+      "impact": "May affect closing residual audit; pre-close VWAP uses interval volumes only",
+      "severity": "warning"
+    },
+    {
+      "date": "all",
+      "time": null,
+      "issue": "no_true_open_field",
+      "evidence": "All price columns are Last Price; no Open column in any sheet",
+      "resolution": "Workbook-only fallback: first regular bar endpoint as open proxy; first entry at next endpoint",
+      "impact": "Adaptation of paper open-anchor rule; not exact replication",
+      "severity": "critical"
+    },
+    {
+      "date": "all",
+      "time": null,
+      "issue": "timestamp_bar_convention_inferred",
+      "evidence": "15:30 equals 16:00 on 121/182 days; large 09:30 volumes; separate close rows",
+      "resolution": "Treat labels as bar-start; availability = label+30m for regular bars",
+      "impact": "Signals evaluated at availability times 10:00..16:00 (or 13:00 half-day)",
+      "severity": "warning"
+    },
+    {
+      "date": "2025-03-24",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=570.8052, daily_close=570.8049",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-05-02",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=563.527, daily_close=563.5267",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-05-09",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=561.1208, daily_close=561.1205",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-05-12",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=579.6644, daily_close=579.6641",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-05-14",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=584.2382, daily_close=584.2379",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-06-10",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=599.6398, daily_close=599.6395",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    },
+    {
+      "date": "2025-06-11",
+      "time": "16:00:00",
+      "issue": "close_price_tolerance_exceeded",
+      "evidence": "intraday_close=597.9296, daily_close=597.9293",
+      "resolution": "Use intraday close print",
+      "impact": "Minor series inconsistency",
+      "severity": "info"
+    }
+  ]
+}

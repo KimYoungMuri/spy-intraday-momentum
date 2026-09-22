@@ -1,0 +1,31 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.3, pytest-9.1.1, pluggy-1.6.0 -- /Users/youngkim/cursorprojects/systematic_investment_strategies/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/youngkim/cursorprojects/systematic_investment_strategies
+configfile: pyproject.toml
+collecting ... collected 14 items
+
+tests/test_strategy.py::test_hand_worked_bands_gap_up PASSED             [  7%]
+tests/test_strategy.py::test_hand_worked_bands_gap_down PASSED           [ 14%]
+tests/test_strategy.py::test_mean_abs_moves_fixture PASSED               [ 21%]
+tests/test_strategy.py::test_cumulative_to_interval_and_vwap PASSED      [ 28%]
+tests/test_strategy.py::test_state_transitions_A PASSED                  [ 35%]
+tests/test_strategy.py::test_state_transitions_BC_stops_sooner PASSED    [ 42%]
+tests/test_strategy.py::test_bc_reentry_and_reverse PASSED               [ 50%]
+tests/test_strategy.py::test_zero_vol_and_constant_price PASSED          [ 57%]
+tests/test_strategy.py::test_sizing_example PASSED                       [ 64%]
+tests/test_strategy.py::test_roundtrip_and_reversal_costs PASSED         [ 71%]
+tests/test_strategy.py::test_half_day_flatten_no_afternoon_trades FAILED [ 78%]
+tests/test_strategy.py::test_no_lookahead_signal_bar_pnl PASSED          [ 85%]
+tests/test_strategy.py::test_sizing_not_affected_by_same_day_close PASSED [ 92%]
+tests/test_strategy.py::test_signal_does_not_earn_prior_bar PASSED       [100%]
+
+=================================== FAILURES ===================================
+__________________ test_half_day_flatten_no_afternoon_trades ___________________
+tests/test_strategy.py:220: in test_half_day_flatten_no_afternoon_trades
+    assert all(pd.to_datetime(half_bars["available_at"]).dt.time <= time(13, 0) if False else True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: 'bool' object is not iterable
+=========================== short test summary info ============================
+FAILED tests/test_strategy.py::test_half_day_flatten_no_afternoon_trades - Ty...
+========================= 1 failed, 13 passed in 0.60s =========================

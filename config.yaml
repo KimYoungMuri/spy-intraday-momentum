@@ -1,0 +1,70 @@
+# Central configuration for B9339 HW1 SPY intraday momentum replication
+# All headline parameters are fixed here; sensitivity grids override one at a time.
+
+paths:
+  raw_workbook: data/raw/hw1.spy.20250313-20251201.intra-30m.xlsx
+  processed_dir: data/processed
+  outputs_dir: outputs
+  logs_dir: logs
+  reports_dir: reports
+
+data:
+  timezone: America/New_York
+  half_day_closes:
+    - "2025-07-03"
+    - "2025-11-28"
+  half_day_close_time: "13:00"
+  full_session_close_time: "16:00"
+  regular_bar_labels:
+    - "09:30"
+    - "10:00"
+    - "10:30"
+    - "11:00"
+    - "11:30"
+    - "12:00"
+    - "12:30"
+    - "13:00"
+    - "13:30"
+    - "14:00"
+    - "14:30"
+    - "15:00"
+    - "15:30"
+  # Inferred: labels are bar-start; observation available at label + 30 minutes
+  timing_convention: bar_start_shifted
+  # Workbook-only fallback: use first regular endpoint as open proxy (not true 09:30 open)
+  open_source: first_bar_endpoint_proxy
+  close_price_tolerance: 0.0003
+  sheets:
+    intraday_clean: AV.Clean
+    intraday_raw: BBRG.Intraday
+    daily: BBRG.Daily
+
+strategy:
+  initial_equity: 100000.0
+  band_lookback: 14
+  sizing_lookback: 14
+  volatility_multiplier: 1.0
+  vol_target_daily: 0.02
+  max_leverage: 4.0
+  commission_per_share: 0.0035
+  slippage_per_share: 0.001
+  risk_free_daily: 0.0
+  trading_days_per_year: 252
+
+evaluation:
+  # Common window starts after 14 prior intraday sessions from first usable day
+  # Expected: 2025-04-02 through 2025-12-01 if all sessions usable
+  include_december_1: true
+  through_november_sensitivity: true
+
+sensitivity:
+  band_lookbacks: [10, 14, 20]
+  volatility_multipliers: [0.75, 1.00, 1.50]
+  exposure_caps: [1.0, 2.0, 4.0]
+  slippage_stress: [0.001, 0.005, 0.01]
+
+bootstrap:
+  enabled: true
+  n_resamples: 1000
+  block_length: 5
+  seed: 42

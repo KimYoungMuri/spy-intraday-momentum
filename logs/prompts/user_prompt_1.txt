@@ -1,0 +1,6 @@
+<timestamp>Tuesday, Sep 22, 2026, 2:12 PM (UTC-4)</timestamp>
+<user_query>
+/Users/youngkim/Downloads/hw1 (1).pdf /Users/youngkim/Downloads/hw1.spy.20250313-20251201.intra-30m.xlsx /Users/youngkim/Downloads/ZarattiniAzizBarbon.202509.BeatTheMarketAnEffectiveIntradayMomentumStrategyForS&P500ETF(SPY).pdf 
+
+help me work on this project. let's first plan and understand what the project's looking for
+</user_query>

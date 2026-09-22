@@ -1,0 +1,10 @@
+[2026-09-22T16:02:42] Starting HW1 pipeline
+[2026-09-22T16:02:43] Audit complete: 182 sessions, 2025-03-13 → 2025-12-01
+[2026-09-22T16:02:43] Eval window: 2025-04-02 → 2025-12-01 (N expected ~168)
+[2026-09-22T16:02:43] Running variant A...
+[2026-09-22T16:02:43] Running variant B...
+[2026-09-22T16:02:43] Running variant C...
+[2026-09-22T16:02:46]   A: total_return=0.03594, Sharpe=0.82958, end_eq=103594.04020, trades=187
+[2026-09-22T16:02:46]   B: total_return=0.04459, Sharpe=0.93934, end_eq=104459.05340, trades=270
+[2026-09-22T16:02:46]   C: total_return=0.11057, Sharpe=1.09023, end_eq=111056.56150, trades=270
+[2026-09-22T16:02:56] Sensitivity rows: 35

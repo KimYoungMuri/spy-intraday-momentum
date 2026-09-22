@@ -1,0 +1,19 @@
+/Users/youngkim/.matplotlib is not a writable directory
+Matplotlib created a temporary cache directory at /var/folders/22/vq_x6tfd7030xfm7y2h3nfz00000gn/T/matplotlib-lbqz07w4 because there was an issue with the default path (/Users/youngkim/.matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+
+Fontconfig error: No writable cache directories
+	/opt/homebrew/var/cache/fontconfig
+	/Users/youngkim/.cache/fontconfig
+	/Users/youngkim/.fontconfig
+Matplotlib is building the font cache; this may take a moment.
+[2026-09-22T15:31:42] Starting HW1 pipeline
+[2026-09-22T15:31:42] Audit complete: 182 sessions, 2025-03-13 → 2025-12-01
+[2026-09-22T15:31:42] Eval window: 2025-04-02 → 2025-12-01 (N expected ~168)
+[2026-09-22T15:31:42] Running variant A...
+[2026-09-22T15:31:43] Running variant B...
+[2026-09-22T15:31:43] Running variant C...
+[2026-09-22T15:31:58]   A: total_return=0.03594, Sharpe=0.82958, end_eq=103594.04020, trades=187
+[2026-09-22T15:31:58]   B: total_return=0.04459, Sharpe=0.93934, end_eq=104459.05340, trades=270
+[2026-09-22T15:31:58]   C: total_return=0.11057, Sharpe=1.09023, end_eq=111056.56150, trades=270
+[2026-09-22T15:32:08] Sensitivity rows: 35
+[2026-09-22T15:32:09] Pipeline complete
