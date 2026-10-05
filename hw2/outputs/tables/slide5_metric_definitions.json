@@ -1,0 +1,8 @@
+{
+  "overlap": "Average across rebalance dates of Jaccard and weight overlap",
+  "characteristic_ranks": "Portfolio-weighted average of within-sector percentile ranks, then averaged across rebalances",
+  "active_returns": "sleeve_return - SPY_return (daily); not regression residuals",
+  "benchmark": "SPY Adj Close total return",
+  "turnover_engine_incl_formation": 0.2762989491230544,
+  "turnover_ex_formation_holdings": 0.2548093796970333
+}

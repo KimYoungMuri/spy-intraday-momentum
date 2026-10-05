@@ -1,0 +1,20 @@
+{
+  "aum": 10000000.0,
+  "position_pct_adv": {
+    "median_pct": 0.025599999999999998,
+    "p95_pct": 0.13628,
+    "max_pct": 5.5945
+  },
+  "trade_pct_adv_rebalance_only": {
+    "median_pct": 0.0009671035766819927,
+    "p95_pct": 0.05467688663812657,
+    "max_pct": 5.59446656089048,
+    "n_trades_gt_1pct_adv": 1,
+    "n_trades_gt_5pct_adv": 1
+  },
+  "turnover": {
+    "avg_one_way_ex_initial_formation": 0.2548093796970333,
+    "n_rebalances_ex_initial": 29,
+    "note": "One-way = 0.5 * L1 weight change; excludes initial book build unless noted"
+  }
+}

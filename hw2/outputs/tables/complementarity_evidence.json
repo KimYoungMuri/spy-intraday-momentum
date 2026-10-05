@@ -1,0 +1,54 @@
+{
+  "avg_weight_overlap_VQM_Mom": 0.596679,
+  "avg_jaccard_VQM_Mom": 0.423033,
+  "avg_weight_overlap_Mom_Value": 0.098579,
+  "avg_weight_overlap_Value_Quality": 0.011208,
+  "active_corr_VQM_Mom": 0.7444199233508827,
+  "active_corr_Value_Mom": 0.012733330451936533,
+  "active_corr_Quality_Mom": 0.1840488330858343,
+  "active_corr_Value_Quality": 0.44818663257682534,
+  "exposures_avg": {
+    "wavg_rank_value": {
+      "Momentum": 0.387,
+      "Quality": 0.1999,
+      "UniverseCap": 0.512,
+      "VQM": 0.5032,
+      "Value": 0.9058
+    },
+    "wavg_rank_quality": {
+      "Momentum": 0.512,
+      "Quality": 0.9055,
+      "UniverseCap": 0.512,
+      "VQM": 0.6459,
+      "Value": 0.2739
+    },
+    "wavg_rank_momentum": {
+      "Momentum": 0.9058,
+      "Quality": 0.5483,
+      "UniverseCap": 0.512,
+      "VQM": 0.8019,
+      "Value": 0.3899
+    },
+    "wavg_value_bm": {
+      "Momentum": 1.4632,
+      "Quality": 0.0881,
+      "UniverseCap": 2.0241,
+      "VQM": 7.0237,
+      "Value": 8.3157
+    },
+    "wavg_quality_roe": {
+      "Momentum": 0.4204,
+      "Quality": 1.3938,
+      "UniverseCap": 0.3205,
+      "VQM": 0.5626,
+      "Value": 0.0757
+    },
+    "wavg_momentum": {
+      "Momentum": 0.7568,
+      "Quality": 0.2869,
+      "UniverseCap": 0.1838,
+      "VQM": 0.5577,
+      "Value": 0.077
+    }
+  }
+}

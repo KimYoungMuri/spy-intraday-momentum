@@ -1,0 +1,7 @@
+pair,avg_jaccard,avg_weight_overlap,n_dates
+VQM_vs_Momentum,0.423033,0.596679,30
+VQM_vs_Value,0.122759,0.224445,30
+VQM_vs_Quality,0.205782,0.335544,30
+Momentum_vs_Value,0.049034,0.098579,30
+Momentum_vs_Quality,0.138546,0.244293,30
+Value_vs_Quality,0.009449,0.011208,30

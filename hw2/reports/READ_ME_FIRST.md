@@ -1,8 +1,14 @@
 # READ ME FIRST — Corrected HW2 Research Package
 
-**Decision (after corrections + A–F study):** **SIMPLIFY** — see `reports/STRATEGY_DECISION.md`.  
-**Pitch outline:** `reports/pitch_deck_outline.md` (7 pages; maps to all assignment requirements).  
-**Do not cite:** pre-correction ~43.5% stock CAGR, ~81.6% holdout CAGR, or ~14.7% ETF-proxy CAGR.
+**Decision:** **Keep VQM**; simplify the fee/deployability claim. Hypothesis = complementarity of selection criteria. See `reports/STRATEGY_DECISION.md`.  
+**Pitch (submit these):**  
+- `reports/slides/pitch_deck.pdf` — complete printable deck (7 slides + appendix; images embedded)  
+- `reports/slides/pitch_deck.html` — self-contained HTML (images embedded as base64)  
+- `reports/APPENDIX.md` — readable high-precision appendix  
+
+**Ask:** illustrative $10mm for the stock mandate, **conditional** on PIT validation — not ready to deploy.  
+**Complementarity evidence (must be in repo):** `outputs/tables/holdings_overlap_summary.csv`, `portfolio_signal_exposures_avg.csv`, `sleeve_active_return_corr.csv`, `complementarity_evidence.json`, `slide5_metric_definitions.json`, plus figures `holdings_overlap_VQM_Mom.png`, `portfolio_characteristic_exposures.png`, `sleeve_active_corr.png`.  
+**Research-log appendix:** `reports/appendix_research_notes.md` (debugging history off main slides).
 
 ---
 
