@@ -1,0 +1,74 @@
+# B9339 HW2 — Systematic Value-Quality-Momentum Strategy
+# Configuration for reproducible research
+
+project:
+  name: "VQM Sector-Neutral Long-Only"
+  objective: "Raise illustrative $10mm AUM for systematic long-only U.S. equity"
+  assignment_cutoff: "2026-10-05"
+  student: "Young Kim"
+
+sample:
+  # Prefer credible shorter sample over contaminated longer one
+  price_start: "2012-01-01"
+  price_end: "2026-09-30"
+  # Yahoo free fundamentals typically cover ~4 annual years; design uses that window
+  design_end: "2025-12-31"
+  holdout_start: "2026-01-01"
+  # First rebalance after annual fundamentals + lag + momentum history are available
+  first_rebalance: "2023-06-30"
+
+universe:
+  n_largest: 500
+  # Not the historical S&P 500 — top N eligible by market cap among downloadable liquid US commons
+  description: "Top 500 eligible U.S. common stocks by market capitalization at each month-end rebalance among the research ticker panel"
+  min_price: 5.0
+  min_adv_usd: 1000000.0  # 20-day average dollar volume floor
+  exclude_nonpositive_book: true
+
+signals:
+  value: "book_equity / market_cap"  # B/M
+  quality: "trailing_12m_net_income / book_equity"  # ROE
+  momentum: "total_return_t-12m_to_t-1m"  # 12-1
+  ranking: "percentile_within_sector"
+  composite_weights: [0.333333, 0.333333, 0.333334]  # V, Q, M
+  selection_pct: 0.20  # top 20% within each sector
+  fundamental_lag_days: 60  # conservative public availability lag
+  min_history_days: 252
+
+portfolio:
+  rebalance: "M"  # month-end
+  sector_weights: "benchmark_cap_weight"  # match eligible-universe sector caps
+  within_sector: "equal_weight"
+  leverage: 1.0
+  shorting: false
+  cash_on_missing: true
+
+costs:
+  # Per-side proportional costs (not observed execution); scenarios in robustness
+  baseline_bps_per_side: 5.0
+  high_bps_per_side: 15.0
+  management_fee_bps_annual: 75.0  # illustrative
+
+benchmarks:
+  primary_etf: "SPY"  # broad U.S. large-cap total return proxy (price+div via adj close)
+  risk_free: "DGS3MO"  # FRED 3-month Treasury constant maturity (%)
+  factor_etfs: ["VLUE", "QUAL", "MTUM", "VTV", "SPHQ", "PDP"]
+
+paths:
+  raw: "data/raw"
+  processed: "data/processed"
+  external: "data/external"
+  tables: "outputs/tables"
+  figures: "outputs/figures"
+  logs: "outputs/logs"
+  reports: "reports"
+
+robustness:
+  signal_weights:
+    - [0.5, 0.25, 0.25]
+    - [0.25, 0.5, 0.25]
+    - [0.25, 0.25, 0.5]
+  selection_pcts: [0.10, 0.20, 0.30]
+  rebalance_freqs: ["M", "Q"]
+  lag_days: [45, 60, 90]
+  cost_bps: [5.0, 10.0, 15.0, 25.0]

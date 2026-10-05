@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+outputs/tables/*
+!outputs/tables/.gitkeep
+outputs/figures/*
+!outputs/figures/.gitkeep
+outputs/logs/*
+!outputs/logs/.gitkeep
+.DS_Store
+*.egg-info/
+.pytest_cache/
+mpl_cache/

@@ -1,0 +1,12 @@
+{
+  "retrieval_date_utc": "2026-10-05T13:44:35.500400+00:00",
+  "assignment_cutoff": "2026-10-05",
+  "status": "resumed_after_shares_tz_bug",
+  "files": [
+    "prices_daily.pkl",
+    "etf_prices.pkl",
+    "risk_free.pkl",
+    "fundamentals_raw.pkl"
+  ],
+  "note": "shares_all missing due to crash; process uses shares_latest/shares_bs with disclosure."
+}

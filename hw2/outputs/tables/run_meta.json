@@ -1,0 +1,13 @@
+{
+  "design_end": "2025-12-31",
+  "holdout_start": "2026-01-01",
+  "n_universe_used": 498,
+  "assumptions": [
+    "Research panel = current Wikipedia S&P 500 constituents (survivorship/membership bias).",
+    "Not historical S&P 500 index membership.",
+    "Yahoo fundamentals are restated; 60-day lag approximates availability only.",
+    "Current GICS sectors applied historically.",
+    "Trades at month-end close; returns from next day via daily weight drift.",
+    "Costs are estimated proportional per-side bps, not observed execution."
+  ]
+}
