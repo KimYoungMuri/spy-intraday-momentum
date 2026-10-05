@@ -82,7 +82,10 @@ def trailing_net_income(fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int)
 
 
 def annual_net_income(fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int) -> pd.Series:
-    """Latest annual net income available by asof — labelled annual fallback, not TTM."""
+    """
+    Latest *vendor-labelled* annual net income available by asof.
+    Does not reclassify quarterly rows as annual via gap heuristics.
+    """
     f = fund_q.dropna(subset=["period_end"]).copy()
     f["available"] = f["period_end"] + pd.Timedelta(days=lag_days)
     f = f[f["available"] <= asof]
@@ -91,16 +94,8 @@ def annual_net_income(fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int) -
         g = g.sort_values("period_end")
         freq = g["statement_freq"].astype(str).str.lower() if "statement_freq" in g.columns else pd.Series("", index=g.index)
         ga = g[freq.isin(["annual", "a", "yearly"])]
-        # Also accept rows with ~365d spacing if freq missing
-        if ga.empty:
-            gaps = g["period_end"].diff().dt.days
-            ga = g[gaps.isna() | (gaps > 200)]
-        ni = ga["net_income_q"].dropna() if len(ga) else g["net_income_q"].dropna()
-        # Prefer values that look annual in magnitude only if freq says annual
-        if len(ga) and ga["net_income_q"].notna().any():
-            out[ticker] = float(ga["net_income_q"].dropna().iloc[-1])
-        else:
-            out[ticker] = np.nan
+        ni = ga["net_income_q"].dropna()
+        out[ticker] = float(ni.iloc[-1]) if len(ni) else np.nan
     return pd.Series(out, name="ni_annual")
 
 
@@ -117,52 +112,103 @@ def latest_book_equity(fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int) 
     return pd.Series(out, name="book_equity")
 
 
-def average_book_equity(fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int) -> pd.Series:
+def average_book_equity_for_income_window(
+    fund_q: pd.DataFrame,
+    asof: pd.Timestamp,
+    lag_days: int,
+    income_start: pd.Series,
+    income_end: pd.Series,
+) -> pd.Series:
     """
-    Average of beginning and ending book equity over the TTM window when possible:
-    mean of book equity 4 quarters ago and latest; else latest only.
+    Period-matched average book equity:
+    mean of book equity available at/just before income_start and at/just before income_end.
+    Falls back to latest available book if window endpoints missing.
     """
     f = fund_q.dropna(subset=["period_end", "book_equity"]).copy()
     f["available"] = f["period_end"] + pd.Timedelta(days=lag_days)
     f = f[f["available"] <= asof]
     out = {}
     for ticker, g in f.groupby("ticker"):
-        g = g.sort_values("period_end")
-        be = g["book_equity"].dropna()
-        if len(be) >= 5:
-            # approx start-of-TTM and end
-            out[ticker] = float((be.iloc[-5] + be.iloc[-1]) / 2.0)
-        elif len(be) >= 2:
-            out[ticker] = float((be.iloc[0] + be.iloc[-1]) / 2.0)
-        elif len(be) == 1:
-            out[ticker] = float(be.iloc[-1])
+        g = g.sort_values(["available", "period_end"])
+        be_end = g["book_equity"].dropna()
+        if be_end.empty:
+            out[ticker] = np.nan
+            continue
+        end_cut = income_end.get(ticker, pd.NaT) if income_end is not None else pd.NaT
+        start_cut = income_start.get(ticker, pd.NaT) if income_start is not None else pd.NaT
+        g_end = g
+        if pd.notna(end_cut):
+            g_end = g[g["period_end"] <= pd.Timestamp(end_cut)]
+        g_start = g
+        if pd.notna(start_cut):
+            g_start = g[g["period_end"] <= pd.Timestamp(start_cut)]
+        b1 = g_end["book_equity"].dropna()
+        b0 = g_start["book_equity"].dropna()
+        if len(b1) and len(b0):
+            out[ticker] = float((b0.iloc[-1] + b1.iloc[-1]) / 2.0)
+        elif len(b1):
+            out[ticker] = float(b1.iloc[-1])
         else:
             out[ticker] = np.nan
     return pd.Series(out, name="book_equity_avg")
 
 
-def market_caps_on(prices: pd.DataFrame, shares: pd.DataFrame | None, asof: pd.Timestamp) -> pd.Series:
-    """Market cap ≈ unadjusted close * shares outstanding as of asof (no future shares)."""
+def income_window_endpoints(
+    fund_q: pd.DataFrame, asof: pd.Timestamp, lag_days: int, mode: str
+) -> tuple[pd.Series, pd.Series]:
+    """Return (period_end_start, period_end_end) for the income measure used."""
+    f = fund_q.dropna(subset=["period_end"]).copy()
+    f["available"] = f["period_end"] + pd.Timedelta(days=lag_days)
+    f = f[f["available"] <= asof]
+    starts, ends = {}, {}
+    for ticker, g in f.groupby("ticker"):
+        g = g.sort_values("period_end")
+        freq = g["statement_freq"].astype(str).str.lower() if "statement_freq" in g.columns else pd.Series("", index=g.index)
+        if mode == "ttm_4q":
+            gq = g[freq.isin(["quarterly", "q"])]
+            if len(gq) >= 4 and gq["net_income_q"].tail(4).notna().all():
+                last4 = gq.tail(4)
+                starts[ticker] = last4["period_end"].iloc[0]
+                ends[ticker] = last4["period_end"].iloc[-1]
+        else:  # annual
+            ga = g[freq.isin(["annual", "a", "yearly"])]
+            ni = ga.dropna(subset=["net_income_q"])
+            if len(ni):
+                ends[ticker] = ni["period_end"].iloc[-1]
+                starts[ticker] = ni["period_end"].iloc[-1]
+    return pd.Series(starts, name="inc_start"), pd.Series(ends, name="inc_end")
+
+
+def market_caps_on(
+    prices: pd.DataFrame, shares: pd.DataFrame | None, asof: pd.Timestamp
+) -> tuple[pd.Series, pd.Series]:
+    """Market cap ≈ unadjusted close * shares with date<=asof. Returns (mcap, shares_source)."""
     px = prices[prices["date"] <= asof].copy()
     last_px = px.sort_values("date").groupby("ticker").tail(1).set_index("ticker")
     price = last_px["close"].astype(float)
     if shares is None or shares.empty:
-        return (price * np.nan).rename("market_cap")
+        return (price * np.nan).rename("market_cap"), pd.Series(dtype=str)
     sh = shares[shares["date"] <= asof].sort_values("date").groupby("ticker").tail(1)
-    sh = sh.set_index("ticker")["shares"].astype(float)
-    return (price * sh).rename("market_cap")
+    src = sh.set_index("ticker")["source"] if "source" in sh.columns else pd.Series("unknown", index=sh["ticker"])
+    shv = sh.set_index("ticker")["shares"].astype(float)
+    # Exclude constant_latest from baseline mcap (mark missing so name fails eligibility)
+    ok = ~src.astype(str).eq("constant_latest") if len(src) else shv.notna()
+    mcap = (price * shv.where(ok)).rename("market_cap")
+    return mcap, src.reindex(mcap.index).rename("shares_source")
 
 
 def adv_20_sessions(prices: pd.DataFrame, asof: pd.Timestamp, calendar: pd.DatetimeIndex) -> pd.Series:
-    """Average dollar volume over exactly the preceding 20 trading sessions ending at asof."""
+    """ADV over preceding 20 trading sessions; requires all 20 observations."""
     cal = calendar[calendar <= asof]
     if len(cal) < 20:
         return pd.Series(dtype=float, name="adv_20d")
-    window_dates = set(cal[-20:])
+    window_dates = list(cal[-20:])
     w = prices[prices["date"].isin(window_dates)].copy()
     w["dv"] = w["close"].astype(float) * w["volume"].astype(float)
-    # Require observations on the window; mean of available sessions
-    return w.groupby("ticker")["dv"].mean().rename("adv_20d")
+    counts = w.groupby("ticker")["dv"].count()
+    means = w.groupby("ticker")["dv"].mean()
+    means = means.where(counts >= 20)
+    return means.rename("adv_20d")
 
 
 def percentile_rank_within_sector(values: pd.Series, sectors: pd.Series, ascending: bool = True) -> pd.Series:
@@ -194,13 +240,15 @@ def build_signals_for_date(
     min_price: float = 5.0,
     min_adv: float = 1_000_000.0,
     n_universe: int = 500,
+    quality_mode: str = "annual_labelled",
 ) -> pd.DataFrame:
     """
     Cross-section at asof.
 
-    Eligibility uses unadjusted close and 20-session ADV.
-    Ranks are computed **after** selecting the top-n_universe by market cap
-    among filter-passing names (not on the broader panel).
+    quality_mode:
+      - 'ttm_4q': require valid 4-quarter TTM (exclude names without it)
+      - 'annual_labelled': require vendor-labelled annual NI (Yahoo exploratory baseline)
+      - 'mixed_reported': prefer TTM else annual; exposes quality_source weights (not frozen baseline)
     """
     calendar = _trading_calendar(prices)
     asof = pd.Timestamp(asof).normalize()
@@ -209,11 +257,30 @@ def build_signals_for_date(
     last = px_hist.sort_values("date").groupby("ticker").tail(1).set_index("ticker")
     adv = adv_20_sessions(prices, asof, calendar)
 
-    mcap = market_caps_on(prices, shares, asof)
+    mcap, shares_source = market_caps_on(prices, shares, asof)
     be = latest_book_equity(fund_q, asof, lag_days)
-    be_avg = average_book_equity(fund_q, asof, lag_days)
     ni_ttm = trailing_net_income(fund_q, asof, lag_days)
     ni_ann = annual_net_income(fund_q, asof, lag_days)
+
+    if quality_mode == "ttm_4q":
+        start_ep, end_ep = income_window_endpoints(fund_q, asof, lag_days, "ttm_4q")
+        ni = ni_ttm
+        qsrc = np.where(ni_ttm.notna(), "ttm_4q", "missing")
+    elif quality_mode == "annual_labelled":
+        start_ep, end_ep = income_window_endpoints(fund_q, asof, lag_days, "annual")
+        ni = ni_ann
+        qsrc = np.where(ni_ann.notna(), "annual", "missing")
+    else:
+        start_ep, end_ep = income_window_endpoints(fund_q, asof, lag_days, "ttm_4q")
+        # for mixed, book window uses TTM endpoints when present else annual
+        ni = ni_ttm.fillna(ni_ann)
+        qsrc = np.where(ni_ttm.notna(), "ttm_4q", np.where(ni_ann.notna(), "annual", "missing"))
+        # rebuild endpoints for annual names
+        s2, e2 = income_window_endpoints(fund_q, asof, lag_days, "annual")
+        start_ep = start_ep.combine_first(s2)
+        end_ep = end_ep.combine_first(e2)
+
+    be_avg = average_book_equity_for_income_window(fund_q, asof, lag_days, start_ep, end_ep)
     mom = momentum_12_1(prices, asof, calendar)
 
     sec = sector_map.set_index("ticker")["sector"]
@@ -224,17 +291,17 @@ def build_signals_for_date(
             "book_equity_avg": be_avg,
             "ni_ttm": ni_ttm,
             "ni_annual": ni_ann,
+            "ni_for_quality": ni,
             "close": last["close"],
             "adv_20d": adv,
             "momentum": mom,
             "sector": sec,
+            "shares_source": shares_source,
         }
     )
+    df["quality_source"] = pd.Series(qsrc, index=ni.index).reindex(df.index).fillna("missing")
     df["value_bm"] = df["book_equity"] / df["market_cap"]
     denom = df["book_equity_avg"].fillna(df["book_equity"])
-    # Prefer true quarterly TTM; else labelled annual NI / book (NOT called TTM)
-    df["quality_source"] = np.where(df["ni_ttm"].notna(), "ttm_4q", np.where(df["ni_annual"].notna(), "annual", "missing"))
-    df["ni_for_quality"] = df["ni_ttm"].fillna(df["ni_annual"])
     df["quality_roe"] = df["ni_for_quality"] / denom
 
     filter_ok = (
@@ -246,14 +313,17 @@ def build_signals_for_date(
         & df["quality_roe"].notna()
         & df["momentum"].notna()
         & df["sector"].notna()
+        & df["quality_source"].ne("missing")
     )
+    # For single-factor momentum/value, quality may be optional — handled by caller via ranks
+    if quality_mode in ("ttm_4q", "annual_labelled", "mixed_reported"):
+        pass
     df["filter_ok"] = filter_ok
 
-    # Top-N by mcap among filter-ok, then rank within that set
     candidates = df[df["filter_ok"]].sort_values("market_cap", ascending=False).head(n_universe)
     df["in_universe"] = False
     df.loc[candidates.index, "in_universe"] = True
-    df["eligible"] = df["in_universe"]  # eligible for ranking/selection = top-N universe
+    df["eligible"] = df["in_universe"]
 
     df["rank_value"] = np.nan
     df["rank_quality"] = np.nan
@@ -269,4 +339,5 @@ def build_signals_for_date(
             candidates["momentum"], candidates["sector"], ascending=True
         )
     df["asof"] = asof
+    df["quality_mode"] = quality_mode
     return df

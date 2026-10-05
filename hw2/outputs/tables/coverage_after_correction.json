@@ -1,0 +1,15 @@
+{
+  "n_price_tickers": 498,
+  "price_start": "2012-01-03",
+  "price_end": "2026-09-29",
+  "n_fund_tickers": 503,
+  "n_shares_tickers": 503,
+  "n_shares_usable_non_constant": 503,
+  "n_shares_constant_fallback_tickers": 0,
+  "n_sectors": 11,
+  "pct_tickers_with_fundamentals": 1.0100401606425702,
+  "shares_policy": "bs_lagged_availability_constant_latest_excluded_from_mcap",
+  "bs_shares_availability_lag_days": 60,
+  "sector_policy": "current_labels_applied_historically",
+  "label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL"
+}

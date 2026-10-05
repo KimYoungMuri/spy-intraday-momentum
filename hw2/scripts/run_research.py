@@ -194,6 +194,7 @@ def main(skip_download: bool = False, prices_only: bool = False):
         mgmt_fee_bps_annual=0.0,
         min_price=cfg["universe"]["min_price"],
         min_adv=cfg["universe"]["min_adv_usd"],
+        quality_mode="annual_labelled",
     )
 
     log("Running VQM gross (0 trading cost)...")

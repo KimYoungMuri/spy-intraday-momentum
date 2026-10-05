@@ -1,0 +1,7 @@
+{
+  "median_position_pct_adv": 0.0002560233382753957,
+  "p95_position_pct_adv": 0.0013629586223820745,
+  "max_position_pct_adv": 0.055944665608902704,
+  "n_positions_gt_1pct_adv": 3,
+  "n_positions_gt_5pct_adv": 2
+}

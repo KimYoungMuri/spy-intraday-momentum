@@ -96,3 +96,26 @@ def cap_weighted_universe(signals: pd.DataFrame, n_universe: int = 500) -> pd.Se
         return pd.Series(dtype=float)
     w = elig["market_cap"] / elig["market_cap"].sum()
     return w.rename("weight")
+
+
+def sector_equal_universe(signals: pd.DataFrame, n_universe: int = 500) -> pd.Series:
+    """
+    Equal-weight within sector; sector weights match eligible-universe cap sector weights.
+    No stock-selection tilt — isolates within-sector equal-weighting vs cap-weight.
+    """
+    elig = select_universe_top_n(signals, n_universe)
+    if elig.empty:
+        return pd.Series(dtype=float)
+    sec_w = sector_benchmark_weights(elig)
+    weights = {}
+    for sec, g in elig.groupby("sector"):
+        sw = float(sec_w.get(sec, 0.0))
+        if sw <= 0 or len(g) == 0:
+            continue
+        w_each = sw / len(g)
+        for t in g.index:
+            weights[t] = w_each
+    w = pd.Series(weights, dtype=float)
+    if w.sum() > 0:
+        w = w / w.sum()
+    return w.rename("weight")

@@ -1,23 +1,49 @@
 {
-  "correction_branch": "hw2/accounting-correction",
-  "design_end": "2025-12-31",
-  "prev_examined_start": "2026-01-01",
-  "n_universe_used": 498,
-  "execution": "next_close",
-  "accounting": "begin_weight_dot_return_then_drift",
+  "pipeline": "run_decision_study.py",
+  "baseline_freeze": {
+    "long_only": true,
+    "rebalance": "monthly",
+    "sector_weights": "match_eligible_universe_cap_weights_at_rebalance",
+    "within_sector": "equal_weight_selected",
+    "selection": "top_20pct_within_sector_on_equal_weight_VQM_composite",
+    "execution": "next_session_close",
+    "value": "book_equity / contemporaneous_market_cap",
+    "quality": "vendor_labelled_annual_NI / period_matched_avg_book (Yahoo exploratory)",
+    "quality_mode": "annual_labelled",
+    "quality_note": "Genuine 4Q TTM unavailable for Yahoo panel at scale; annual labelled separately",
+    "momentum": "total_return between 252-session and 21-session lookback endpoints",
+    "cost_model": "PROPORTIONAL_APPROXIMATION L1 * bps_per_side",
+    "missing_returns": "halt_zero_flagged",
+    "first_rebalance": "2023-06-30",
+    "design_end": "2025-12-31",
+    "data_label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL"
+  },
+  "coverage": {
+    "n_price_tickers": 498,
+    "price_start": "2012-01-03",
+    "price_end": "2026-09-29",
+    "n_fund_tickers": 503,
+    "n_shares_tickers": 503,
+    "n_shares_usable_non_constant": 503,
+    "n_shares_constant_fallback_tickers": 0,
+    "n_sectors": 11,
+    "pct_tickers_with_fundamentals": 1.0100401606425702,
+    "shares_policy": "bs_lagged_availability_constant_latest_excluded_from_mcap",
+    "bs_shares_availability_lag_days": 60,
+    "sector_policy": "current_labels_applied_historically",
+    "label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL"
+  },
+  "verdict": "SIMPLIFY",
   "data_label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL",
+  "cost_model": "PROPORTIONAL_APPROXIMATION",
+  "prev_examined_start": "2026-01-01",
   "superseded_numbers": [
-    "Do not cite pre-correction ~43.5% stock CAGR, ~81.6% holdout CAGR, or ~14.7% ETF-proxy CAGR"
+    "Do not cite pre-correction ~43.5% / ~81.6% / ~14.7% figures"
   ],
-  "assumptions": [
-    "Research panel = current S&P 500 constituents (survivorship/membership bias).",
-    "Not historical S&P 500; not CRSP top-500.",
-    "Yahoo fundamentals are restated; 60-day lag approximates availability only.",
-    "Current GICS sectors applied historically.",
-    "Signals at month-end close; trades at next session close.",
-    "Portfolio return = beginning weights \u00b7 asset returns; then drift.",
-    "Costs = L1 traded weight * bps_per_side; NAV scaled (1+Rp)*(1-cost)*(1-fee)-1.",
-    "FRED DGS3MO is a yield converted as y/100/252 \u2014 not Kenneth French realized RF.",
-    "2026 evaluation period was previously inspected \u2014 not an untouched test set."
-  ]
+  "sharadar": "Not purchased; set SHARADAR_API_KEY only if already licensed \u2014 subscription \u2260 PIT pipeline",
+  "reproduction": {
+    "fresh_download": "python scripts/run_research.py",
+    "cached_reproduction": "python scripts/run_decision_study.py  # uses data/raw cache",
+    "tests": "pytest tests/test_accounting.py -q"
+  }
 }

@@ -25,26 +25,31 @@ def load_raw():
     return cfg, root, prices, etf, rf, fund, sectors
 
 
-def build_shares_panel(raw: Path, fund: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
+def build_shares_panel(
+    raw: Path,
+    fund: pd.DataFrame,
+    prices: pd.DataFrame,
+    bs_availability_lag_days: int = 60,
+) -> pd.DataFrame:
     """
     Assemble shares outstanding for market-cap ranking.
 
     Priority:
-    1. Historical share observations from data/raw/shares_all.pkl or shares/*.csv
-       (date <= asof when used — no future backfill in the signal layer).
-    2. Balance-sheet share counts by period_end (treated as available with same lag
-       elsewhere; here dated at period_end for as-of merge).
-    3. ONLY if no history: constant latest sharesOutstanding, flagged in coverage.
+    1. Historical share observations from shares_all.pkl / shares/*.csv
+    2. Balance-sheet share counts dated at availability = period_end + lag
+    3. constant_latest audit rows only (excluded from market-cap eligibility)
 
     Never apply a future share count to an earlier date when history exists.
     """
-    frames = []
+    frames: list[pd.DataFrame] = []
     shares_all = raw / "shares_all.pkl"
     if shares_all.exists():
         try:
             df = load_frame(shares_all)
             df["date"] = to_naive_timestamp(df["date"])
-            frames.append(df[["date", "ticker", "shares"]].dropna())
+            tmp = df[["date", "ticker", "shares"]].dropna().copy()
+            tmp["source"] = "shares_full"
+            frames.append(tmp)
         except Exception:
             pass
     sh_dir = raw / "shares"
@@ -57,34 +62,51 @@ def build_shares_panel(raw: Path, fund: pd.DataFrame, prices: pd.DataFrame) -> p
                 df["date"] = to_naive_timestamp(df["date"])
                 if "ticker" not in df.columns:
                     df["ticker"] = p.stem
-                frames.append(df[["date", "ticker", "shares"]].dropna())
+                tmp = df[["date", "ticker", "shares"]].dropna().copy()
+                tmp["source"] = "shares_csv"
+                frames.append(tmp)
             except Exception:
                 continue
 
-    # BS share lines dated at period_end
     if "shares_bs" in fund.columns:
         bs = fund.dropna(subset=["shares_bs", "period_end"]).copy()
         if len(bs):
+            pe = to_naive_timestamp(bs["period_end"])
             bs = bs.assign(
-                date=to_naive_timestamp(bs["period_end"]),
+                date=pe + pd.Timedelta(days=bs_availability_lag_days),
                 shares=bs["shares_bs"].astype(float),
-            )[["date", "ticker", "shares"]]
+                source="balance_sheet_lagged",
+            )[["date", "ticker", "shares", "source"]]
             frames.append(bs)
 
-    hist = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["date", "ticker", "shares"])
+    hist = (
+        pd.concat(frames, ignore_index=True)
+        if frames
+        else pd.DataFrame(columns=["date", "ticker", "shares", "source"])
+    )
     if len(hist):
         hist["ticker"] = hist["ticker"].astype(str)
         hist = hist.dropna(subset=["shares", "date"])
-        hist = hist.sort_values(["ticker", "date"]).drop_duplicates(["ticker", "date"], keep="last")
+        src_rank = {
+            "shares_full": 0,
+            "shares_csv": 1,
+            "balance_sheet_lagged": 2,
+            "constant_latest": 9,
+        }
+        hist["_rank"] = hist["source"].map(src_rank).fillna(5)
+        hist = (
+            hist.sort_values(["ticker", "date", "_rank"])
+            .drop_duplicates(["ticker", "date"], keep="first")
+            .drop(columns=["_rank"])
+        )
 
     have = set(hist["ticker"].unique()) if len(hist) else set()
     meta = fund[fund["_meta"] == True].copy() if "_meta" in fund.columns else pd.DataFrame()
-    constants = {}
+    constants: dict[str, float] = {}
     if len(meta) and "shares_latest" in meta.columns:
         for _, row in meta.dropna(subset=["shares_latest"]).iterrows():
             constants[str(row["ticker"])] = float(row["shares_latest"])
 
-    # Constant fallback only for tickers lacking any history
     dates = to_naive_timestamp(prices["date"]).drop_duplicates().sort_values()
     d0, d1 = dates.min(), dates.max()
     fill_rows = []
@@ -94,27 +116,30 @@ def build_shares_panel(raw: Path, fund: pd.DataFrame, prices: pd.DataFrame) -> p
         fill_rows.append({"date": d0, "ticker": t, "shares": sh, "source": "constant_latest"})
         fill_rows.append({"date": d1, "ticker": t, "shares": sh, "source": "constant_latest"})
     if fill_rows:
-        hist = pd.concat([hist.assign(source="historical"), pd.DataFrame(fill_rows)], ignore_index=True)
-    elif len(hist) and "source" not in hist.columns:
-        hist["source"] = "historical"
+        hist = pd.concat([hist, pd.DataFrame(fill_rows)], ignore_index=True)
 
     hist["date"] = to_naive_timestamp(hist["date"])
     return hist.dropna(subset=["shares"]).sort_values(["ticker", "date"])
 
 
 def process_fundamentals(fund: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize fundamentals. Vendor statement_freq is preserved.
+    Gap-based inference only fills unknown as quarterly when spacing is clearly
+    quarterly; we do NOT infer 'annual' from long gaps (that misclassified
+    sparse quarterly rows as annual income).
+    """
     f = fund.copy()
     if "_meta" in f.columns:
         f = f[f["_meta"] != True]
     f = f.dropna(subset=["period_end"], how="any")
     f["period_end"] = to_naive_timestamp(f["period_end"])
-    # Preserve vendor statement_freq when present (A/Q/annual/quarterly)
     if "statement_freq" not in f.columns:
-        f["statement_freq"] = np.nan
+        f["statement_freq"] = pd.Series([np.nan] * len(f), dtype=object)
+    f["statement_freq"] = f["statement_freq"].astype(object)
     mapped = f["statement_freq"].astype(str).str.upper()
     f.loc[mapped.isin(["A", "ANNUAL", "YEARLY"]), "statement_freq"] = "annual"
     f.loc[mapped.isin(["Q", "QUARTERLY"]), "statement_freq"] = "quarterly"
-    # Infer only where still unknown/nan/meta
     rows = []
     for ticker, g in f.groupby("ticker"):
         g = g.sort_values("period_end").copy()
@@ -130,9 +155,8 @@ def process_fundamentals(fund: pd.DataFrame) -> pd.DataFrame:
                 freqs.append("unknown")
             elif 60 <= gap <= 140:
                 freqs.append("quarterly")
-            elif gap > 200:
-                freqs.append("annual")
             else:
+                # Long or irregular gaps stay unknown — not labelled annual
                 freqs.append("unknown")
         g["statement_freq"] = freqs
         rows.append(g)
@@ -167,23 +191,33 @@ def run_process() -> dict:
     etf["date"] = to_naive_timestamp(etf["date"])
     rf["date"] = to_naive_timestamp(rf["date"])
 
+    lag = int(cfg.get("strategy", {}).get("fundamental_lag_days", 60))
     fund_q = process_fundamentals(fund)
-    shares = build_shares_panel(raw, fund, prices)
+    shares = build_shares_panel(raw, fund, prices, bs_availability_lag_days=lag)
     sec = enrich_sectors(sectors, fund)
 
-    n_const = int((shares.get("source", pd.Series(dtype=str)) == "constant_latest").sum() // 2) if len(shares) else 0
+    n_const = (
+        int((shares.get("source", pd.Series(dtype=str)) == "constant_latest").sum() // 2)
+        if len(shares)
+        else 0
+    )
+    n_usable = int(
+        shares.loc[shares["source"] != "constant_latest", "ticker"].nunique()
+    ) if len(shares) else 0
     coverage = {
         "n_price_tickers": int(prices["ticker"].nunique()),
         "price_start": str(prices["date"].min().date()),
         "price_end": str(prices["date"].max().date()),
         "n_fund_tickers": int(fund_q["ticker"].nunique()),
         "n_shares_tickers": int(shares["ticker"].nunique()) if len(shares) else 0,
+        "n_shares_usable_non_constant": n_usable,
         "n_shares_constant_fallback_tickers": n_const,
         "n_sectors": int(sec["sector"].nunique()),
         "pct_tickers_with_fundamentals": float(
             fund_q["ticker"].nunique() / max(prices["ticker"].nunique(), 1)
         ),
-        "shares_policy": "historical_preferred_constant_latest_fallback",
+        "shares_policy": "bs_lagged_availability_constant_latest_excluded_from_mcap",
+        "bs_shares_availability_lag_days": lag,
         "sector_policy": "current_labels_applied_historically",
         "label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL",
     }

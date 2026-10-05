@@ -1,0 +1,10 @@
+{
+  "label": "EX_POST_VOLATILITY_MATCHED_DIAGNOSTIC_NOT_EXECUTABLE",
+  "scale_factor": 0.859777397298219,
+  "strat_vol": 0.18044591807748228,
+  "bench_vol": 0.15514332179774537,
+  "scaled_cagr": 0.22816530145150238,
+  "bench_cagr": 0.20402349919610008,
+  "scaled_max_dd": -0.19923096866672685,
+  "bench_max_dd": -0.18755220835437203
+}

@@ -1,0 +1,19 @@
+{
+  "verdict": "SIMPLIFY",
+  "verdict_paragraph": "**SIMPLIFY.** After correctness fixes, combining value and quality with momentum does not add enough (on this biased Yahoo panel) to justify the extra data and complexity versus simpler comparators. Drop the paid stock-selection claim; present an illustrative study with full disclosure, or redefine the assignment around a labelled factor-ETF allocation.",
+  "factor_combo": "After corrected accounting on the Yahoo exploratory panel, VQM after-cost CAGR=26.71% vs momentum-only=35.64%, universe-cap=22.54%, SPY=20.40%. Sharpes: VQM=1.13, momentum=1.32. Avg one-way turnover: VQM=27.63%, momentum=27.49%. Largest calendar-year VQM\u2212momentum spread is in 2025 (spread=-14.55%); treat single-year dominance as a risk to the claim. On this sample, adding value and quality does **not** clearly improve the portfolio enough to justify the extra fundamental data and implementation complexity versus momentum-only or the eligible-universe benchmarks.",
+  "fee_claim": "After-fee VQM CAGR=25.77% vs momentum-after-fee=34.63%, universe-cap (after cost)=22.54%, SPY=20.40%. The combination does not clearly earn a stock-level management fee; simplify the product definition for the assignment.",
+  "decision_detail": "Evidence supports simplifying toward (a) momentum-only within the same rules, or (b) the eligible-universe sector-equal/cap benchmarks as the honest baseline, or (c) a separately labelled monthly VLUE/QUAL/MTUM ETF allocation for the pitch \u2014 not as a substitute track record for the stock strategy. Do not claim the in-sample winner will keep winning.",
+  "next_step": "If keeping stocks: licensed historical membership + as-reported fundamentals with availability dates. If assignment-only: freeze a VLUE/QUAL/MTUM equal-weight monthly rebalance ETF sleeve with after-inception histories, one-sided costs, and no double-counting of ER.",
+  "capacity": "At illustrative $10mm AUM, median position/ADV=0.0002560233382753957, p95=0.0013629586223820745, max=0.055944665608902704. Operational feasibility of small AUM is separate from whether a standalone firm can charge for alpha that has not been established on credible PIT data.",
+  "design_start": "2023-07-03",
+  "design_end": "2025-12-31",
+  "metrics": {
+    "vqm_cagr": 0.26711969962968096,
+    "mom_cagr": 0.35640087237839,
+    "univ_cagr": 0.2253893113219012,
+    "spy_cagr": 0.20402349919610008,
+    "vqm_fee_cagr": 0.25765171033075607,
+    "mom_fee_cagr": 0.3462657691608415
+  }
+}

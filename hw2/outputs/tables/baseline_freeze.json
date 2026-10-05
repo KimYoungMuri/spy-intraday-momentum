@@ -1,0 +1,27 @@
+{
+  "label": "FROZEN_BASELINE_VQM",
+  "frozen_at": "2026-10-05 18:54:31.293287",
+  "definition": {
+    "long_only": true,
+    "rebalance": "monthly",
+    "sector_weights": "match_eligible_universe_cap_weights_at_rebalance",
+    "within_sector": "equal_weight_selected",
+    "selection": "top_20pct_within_sector_on_equal_weight_VQM_composite",
+    "execution": "next_session_close",
+    "value": "book_equity / contemporaneous_market_cap",
+    "quality": "vendor_labelled_annual_NI / period_matched_avg_book (Yahoo exploratory)",
+    "quality_mode": "annual_labelled",
+    "quality_note": "Genuine 4Q TTM unavailable for Yahoo panel at scale; annual labelled separately",
+    "momentum": "total_return between 252-session and 21-session lookback endpoints",
+    "cost_model": "PROPORTIONAL_APPROXIMATION L1 * bps_per_side",
+    "missing_returns": "halt_zero_flagged",
+    "first_rebalance": "2023-06-30",
+    "design_end": "2025-12-31",
+    "data_label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL"
+  },
+  "cost_fee_layers": {
+    "gross": "0 bps trading, 0 mgmt fee",
+    "after_trading_cost": "5.0 bps/side proportional approx",
+    "after_mgmt_fee": "trading costs + 75.0 bps annual mgmt"
+  }
+}
