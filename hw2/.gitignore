@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 .venv/
+.cache/
+**/.cache/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
@@ -15,3 +17,7 @@ outputs/logs/*
 *.egg-info/
 .pytest_cache/
 mpl_cache/
+*.db
+.env
+credentials*.json
+**/secrets*

@@ -36,10 +36,9 @@ def etf_daily_returns(etf: pd.DataFrame, ticker: str) -> pd.Series:
     return g.pct_change().dropna().rename(ticker)
 
 
-def run_etf_proxy_study(cfg, etf, rf, tables, figures, start, end):
+def run_etf_proxy_study(cfg, etf, rf, tables, figures, start, end, tag=""):
     """Separately labeled real-data factor ETF proxy — NOT the stock strategy."""
     spy = etf_daily_returns(etf, cfg["benchmarks"]["primary_etf"])
-    # Equal-weight VLUE / QUAL / MTUM when available
     available = set(etf["ticker"].unique())
     legs = [t for t in ["VLUE", "QUAL", "MTUM"] if t in available]
     if len(legs) < 2:
@@ -49,35 +48,38 @@ def run_etf_proxy_study(cfg, etf, rf, tables, figures, start, end):
         etf, w, start, end,
         cost_bps_per_side=cfg["costs"]["baseline_bps_per_side"],
         name="ETF_proxy_equal_VQM",
+        execution="next_close",
     )
     rf_s = rf.set_index("date")["rf_daily"]
+    spy_a = spy.reindex(proxy.returns.index)
     summ = {
-        "ETF_proxy_VQM": summarize(proxy.returns, spy.reindex(proxy.returns.index), rf_s),
-        "SPY": summarize(spy.reindex(proxy.returns.index).fillna(0), None, rf_s),
+        "ETF_proxy_VQM": summarize(proxy.returns, spy_a, rf_s),
+        "SPY": summarize(spy_a.dropna(), None, rf_s),
     }
     for t in legs:
-        r = etf_daily_returns(etf, t).reindex(proxy.returns.index).fillna(0)
-        summ[t] = summarize(r, spy.reindex(proxy.returns.index), rf_s)
+        r = etf_daily_returns(etf, t).reindex(proxy.returns.index)
+        summ[t] = summarize(r.dropna(), spy_a, rf_s)
     df = format_summary_table(summ)
-    df.to_csv(tables / "etf_proxy_summary.csv", float_format="%.8f")
-    # chart
+    suffix = f"_{tag}" if tag else ""
+    df.to_csv(tables / f"etf_proxy_summary{suffix}.csv", float_format="%.8f")
     plt.figure(figsize=(10, 5))
     cumulative_returns(proxy.returns).plot(label="ETF proxy V/Q/M")
-    cumulative_returns(spy.reindex(proxy.returns.index).fillna(0)).plot(label="SPY")
+    cumulative_returns(spy_a.fillna(0)).plot(label="SPY")
     plt.legend()
-    plt.title("LABELLED PROXY (not stock-selection track record)")
+    plt.title("LABELLED ETF PROXY (not stock-selection track record)")
     plt.ylabel("Cumulative return")
-    save_fig(figures / "etf_proxy_cumret.png")
+    save_fig(figures / f"etf_proxy_cumret{suffix}.png")
     meta = {
         "label": "ETF_PROXY_NOT_STOCK_STRATEGY",
         "weights": w,
+        "start": start,
+        "end": end,
         "difference_from_proposed": (
-            "Uses factor ETFs with their own methodologies, reconstitution, and costs; "
-            "not sector-neutral stock selection within a top-500 eligible universe; "
-            "not equal-weight within sector; different signals and lags."
+            "Uses factor ETFs with their own methodologies; "
+            "not the proposed sector-weight-matched stock-selection strategy."
         ),
     }
-    (tables / "etf_proxy_meta.json").write_text(json.dumps(meta, indent=2))
+    (tables / f"etf_proxy_meta{suffix}.json").write_text(json.dumps(meta, indent=2))
     return proxy, df
 
 
@@ -141,12 +143,15 @@ def main(skip_download: bool = False, prices_only: bool = False):
         else:
             rf = download_fred_rf(cfg["benchmarks"]["risk_free"], cfg["sample"]["price_start"])
             save_frame(rf, raw / "risk_free.pkl")
-        log("Running labelled ETF proxy study...")
+        log("Running labelled ETF proxy study (long horizon, separate from stock strategy)...")
         proxy, proxy_df = run_etf_proxy_study(
             cfg, etf, rf, tables, figures,
-            cfg["sample"]["first_rebalance"], cfg["sample"]["price_end"],
+            "2014-01-31", cfg["sample"]["price_end"], tag="long",
         )
-        log("ETF proxy summary:\n" + proxy_df.to_string())
+        log("ETF proxy long-horizon summary:\n" + proxy_df.to_string())
+        # also write default name expected by older docs
+        proxy_df.to_csv(tables / "etf_proxy_summary.csv", float_format="%.8f")
+        proxy_df.to_csv(tables / "etf_proxy_long_horizon_summary.csv", float_format="%.8f")
 
     # Process + stock backtest if fundamentals exist
     fund_path = raw / "fundamentals_raw.pkl"
@@ -191,8 +196,10 @@ def main(skip_download: bool = False, prices_only: bool = False):
         min_adv=cfg["universe"]["min_adv_usd"],
     )
 
-    log("Running baseline VQM (gross of mgmt fee, net of 5bps/side)...")
-    baseline = run_backtest(name="VQM_baseline", **common_kwargs)
+    log("Running VQM gross (0 trading cost)...")
+    gross = run_backtest(name="VQM_gross", **{**common_kwargs, "cost_bps_per_side": 0.0})
+    log("Running baseline VQM (after 5bps/side trading costs, before mgmt fee)...")
+    baseline = run_backtest(name="VQM_after_costs", **common_kwargs)
     log("Running value/quality/momentum only...")
     value_only = run_backtest(name="value_only", single_factor="value", **common_kwargs)
     quality_only = run_backtest(name="quality_only", single_factor="quality", **common_kwargs)
@@ -201,7 +208,7 @@ def main(skip_download: bool = False, prices_only: bool = False):
     univ_cap = run_backtest(name="universe_cap", universe_cap_weight=True, **common_kwargs)
     log("Running net of illustrative mgmt fee...")
     net_fee = run_backtest(
-        name="VQM_net_fee",
+        name="VQM_after_costs_and_fee",
         **{**common_kwargs, "mgmt_fee_bps_annual": cfg["costs"]["management_fee_bps_annual"]},
     )
     log("Running high cost scenario...")
@@ -211,8 +218,9 @@ def main(skip_download: bool = False, prices_only: bool = False):
     )
 
     strategies = {
-        "VQM_baseline": baseline,
-        "VQM_net_fee": net_fee,
+        "VQM_gross": gross,
+        "VQM_after_costs": baseline,
+        "VQM_after_costs_and_fee": net_fee,
         "VQM_high_cost": high_cost,
         "value_only": value_only,
         "quality_only": quality_only,
@@ -220,18 +228,31 @@ def main(skip_download: bool = False, prices_only: bool = False):
         "universe_cap": univ_cap,
     }
 
-    spy_d = spy.reindex(baseline.returns.index).fillna(0)
+    # Align SPY on strategy dates only (no fillna inventing returns)
+    spy_d = spy.reindex(baseline.returns.index)
     summaries = {}
     for k, res in strategies.items():
         summaries[k] = summarize(res.returns, spy_d, rf_s)
-    summaries["SPY"] = summarize(spy_d, None, rf_s)
+        summaries[k]["avg_turnover_one_way"] = float(res.turnover.mean()) if len(res.turnover) else np.nan
+        summaries[k]["sample_start"] = str(res.returns.index.min().date()) if len(res.returns) else None
+        summaries[k]["sample_end"] = str(res.returns.index.max().date()) if len(res.returns) else None
+    summaries["SPY"] = summarize(spy_d.dropna(), None, rf_s)
+    summaries["SPY"]["sample_start"] = str(spy_d.dropna().index.min().date()) if spy_d.notna().any() else None
+    summaries["SPY"]["sample_end"] = str(spy_d.dropna().index.max().date()) if spy_d.notna().any() else None
     summary_df = format_summary_table(summaries)
     summary_df.to_csv(tables / "design_period_summary.csv", float_format="%.8f")
+    # Readable percent table for humans
+    pct_cols = ["cagr", "ann_vol", "max_drawdown", "tracking_error", "active_cagr", "total_return"]
+    readable = summary_df.copy()
+    for c in pct_cols:
+        if c in readable.columns:
+            readable[c] = (readable[c] * 100).map(lambda x: f"{x:.2f}%" if pd.notna(x) else "")
+    readable.to_csv(tables / "design_period_summary_readable.csv")
     log("Design-period summary:\n" + summary_df.to_string())
 
     # Annual returns
     ann = {k: annual_returns(v.returns) for k, v in strategies.items()}
-    ann["SPY"] = annual_returns(spy_d)
+    ann["SPY"] = annual_returns(spy_d.dropna())
     ann_df = pd.DataFrame(ann)
     ann_df.to_csv(tables / "annual_returns.csv", float_format="%.8f")
 
@@ -242,23 +263,33 @@ def main(skip_download: bool = False, prices_only: bool = False):
     # Holdings log
     baseline.holdings_log.to_csv(tables / "rebalance_holdings_log.csv", index=False)
     baseline.returns.to_csv(tables / "VQM_baseline_daily_returns.csv", float_format="%.10f", header=["ret"])
+    gross.returns.to_csv(tables / "VQM_gross_daily_returns.csv", float_format="%.10f", header=["ret"])
 
     # Charts
     plt.figure(figsize=(10, 5))
-    for k in ["VQM_baseline", "value_only", "quality_only", "momentum_only", "universe_cap"]:
+    for k in ["VQM_after_costs", "value_only", "quality_only", "momentum_only", "universe_cap"]:
         cumulative_returns(strategies[k].returns).plot(label=k)
-    cumulative_returns(spy_d).plot(label="SPY", linewidth=2, color="black")
+    cumulative_returns(spy_d.fillna(0)).plot(label="SPY", linewidth=2, color="black")
     plt.legend()
-    plt.title("Design period cumulative returns (net of stated trading costs)")
+    plt.title("Design period — CORRECTED accounting (Yahoo exploratory panel)")
     plt.ylabel("Cumulative return")
     save_fig(figures / "design_cumret.png")
 
-    # Drawdown
-    wealth = (1 + baseline.returns.fillna(0)).cumprod()
+    # Growth of $10,000
+    plt.figure(figsize=(10, 5))
+    ((1 + baseline.returns.fillna(0)).cumprod() * 10000).plot(label="VQM after costs")
+    ((1 + spy_d.fillna(0)).cumprod() * 10000).plot(label="SPY")
+    plt.legend()
+    plt.title("Growth of $10,000 (design window; exploratory Yahoo panel)")
+    plt.ylabel("Portfolio value ($)")
+    save_fig(figures / "growth_of_10000.png")
+
+    # Drawdown from NAV=1
+    wealth = pd.concat([pd.Series([1.0]), (1 + baseline.returns.fillna(0)).cumprod()])
     dd = wealth / wealth.cummax() - 1
     plt.figure(figsize=(10, 3))
-    dd.plot(color="firebrick")
-    plt.title("VQM baseline drawdown")
+    dd.iloc[1:].plot(color="firebrick")
+    plt.title("VQM after-costs drawdown (peak includes initial NAV=1)")
     plt.ylabel("Drawdown")
     save_fig(figures / "vqm_drawdown.png")
 
@@ -292,17 +323,24 @@ def main(skip_download: bool = False, prices_only: bool = False):
     rob_df.to_csv(tables / "robustness_design.csv", float_format="%.8f")
     log("Robustness done.")
 
-    # Historical holdout — only after design fixed
-    log("Evaluating historical holdout (design frozen)...")
-    holdout_kwargs = {**common_kwargs, "start": holdout_start, "end": holdout_end, "first_rebalance": holdout_start}
-    # Need continuous weights — run full sample then slice
+    # Cost sensitivity chart
+    cost_rows = rob_df[rob_df.index.str.startswith("cost_bps")]
+    if len(cost_rows):
+        plt.figure(figsize=(8, 4))
+        (cost_rows["cagr"] * 100).plot(kind="bar")
+        plt.ylabel("CAGR (%)")
+        plt.title("Cost sensitivity (design window)")
+        save_fig(figures / "cost_sensitivity.png")
+
+    # Previously examined historical evaluation period (NOT untouched OOS)
+    log("Evaluating previously examined historical period (not untouched holdout)...")
     full_kwargs = {**common_kwargs, "end": holdout_end}
     full = run_backtest(name="VQM_full", **full_kwargs)
     hold = full.returns.loc[holdout_start:]
-    spy_h = spy.reindex(hold.index).fillna(0)
+    spy_h = spy.reindex(hold.index)
     holdout_sum = {
-        "VQM_holdout": summarize(hold, spy_h, rf_s),
-        "SPY_holdout": summarize(spy_h, None, rf_s),
+        "VQM_prev_examined": summarize(hold, spy_h, rf_s),
+        "SPY_same_dates": summarize(spy_h.dropna(), None, rf_s),
     }
     format_summary_table(holdout_sum).to_csv(tables / "holdout_summary.csv", float_format="%.8f")
     full.returns.to_csv(tables / "VQM_full_daily_returns.csv", float_format="%.10f", header=["ret"])
@@ -310,23 +348,33 @@ def main(skip_download: bool = False, prices_only: bool = False):
     plt.figure(figsize=(10, 5))
     cumulative_returns(full.returns).plot(label="VQM full")
     cumulative_returns(spy.reindex(full.returns.index).fillna(0)).plot(label="SPY")
-    plt.axvline(pd.Timestamp(holdout_start), color="gray", linestyle="--", label="holdout start")
+    plt.axvline(pd.Timestamp(holdout_start), color="gray", linestyle="--", label="prev-examined period start")
     plt.legend()
-    plt.title("Full sample with historical holdout marker")
+    plt.title("Full sample (corrected); 2026 slice previously examined — not untouched OOS")
     save_fig(figures / "full_cumret_holdout.png")
 
     (logs / "research_log.txt").write_text("\n".join(research_log))
     meta = {
+        "correction_branch": "hw2/accounting-correction",
         "design_end": end,
-        "holdout_start": holdout_start,
+        "prev_examined_start": holdout_start,
         "n_universe_used": common_kwargs["n_universe"],
+        "execution": "next_close",
+        "accounting": "begin_weight_dot_return_then_drift",
+        "data_label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL",
+        "superseded_numbers": [
+            "Do not cite pre-correction ~43.5% stock CAGR, ~81.6% holdout CAGR, or ~14.7% ETF-proxy CAGR",
+        ],
         "assumptions": [
-            "Research panel = current Wikipedia S&P 500 constituents (survivorship/membership bias).",
-            "Not historical S&P 500 index membership.",
+            "Research panel = current S&P 500 constituents (survivorship/membership bias).",
+            "Not historical S&P 500; not CRSP top-500.",
             "Yahoo fundamentals are restated; 60-day lag approximates availability only.",
             "Current GICS sectors applied historically.",
-            "Trades at month-end close; returns from next day via daily weight drift.",
-            "Costs are estimated proportional per-side bps, not observed execution.",
+            "Signals at month-end close; trades at next session close.",
+            "Portfolio return = beginning weights · asset returns; then drift.",
+            "Costs = L1 traded weight * bps_per_side; NAV scaled (1+Rp)*(1-cost)*(1-fee)-1.",
+            "FRED DGS3MO is a yield converted as y/100/252 — not Kenneth French realized RF.",
+            "2026 evaluation period was previously inspected — not an untouched test set.",
         ],
     }
     (tables / "run_meta.json").write_text(json.dumps(meta, indent=2))

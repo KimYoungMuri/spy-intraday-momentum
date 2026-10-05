@@ -1,0 +1,9 @@
+{
+  "label": "ETF_PROXY_NOT_STOCK_STRATEGY",
+  "weights": {
+    "VLUE": 0.3333333333333333,
+    "QUAL": 0.3333333333333333,
+    "MTUM": 0.3333333333333333
+  },
+  "difference_from_proposed": "Uses factor ETFs with their own methodologies, reconstitution, and costs; not sector-neutral stock selection within a top-500 eligible universe; not equal-weight within sector; different signals and lags."
+}

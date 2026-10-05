@@ -1,0 +1,41 @@
+{
+  "recorded_at_utc": "2026-10-05T14:48:55.838486+00:00",
+  "original_commit": "d51066f",
+  "branch": "hw2/accounting-correction",
+  "python": "3.13.3",
+  "file_hashes_pre_rerun": {
+    "config.yaml": {
+      "sha256": "6b6dd011d5f162bb4f459bfa0ea407e0e3c8f9483bb7a63a80b7a02bb378b72e",
+      "bytes": 2514
+    },
+    "src/sis_hw2/backtest/engine.py": {
+      "sha256": "4109289252b00b23a7dd876c88f43955c6d0aa1cbd6ef5d87a0ddae5ba0000e4",
+      "bytes": 12346
+    },
+    "src/sis_hw2/signals/factors.py": {
+      "sha256": "5c14cb8aa6aa43e07cf49e618163f6c125593b9ff573611f59a6e2ae233045aa",
+      "bytes": 10094
+    },
+    "outputs/tables/design_period_summary.csv": {
+      "sha256": "60e30fa021d5a6945cccc10119eea919657ddcc35a6eb6f44cad8b17fdb97af4",
+      "bytes": 1061
+    },
+    "data/raw/prices_daily.pkl": {
+      "sha256": "1477801706f460602b6e60d98ad019c1d92dc97177f839a8ff71380412b930cb",
+      "bytes": 131674721
+    },
+    "data/raw/fundamentals_raw.pkl": {
+      "sha256": "f043cf083e50f6c0807d234f7c378c825fb55c9c9bf0f0c5a213ebf59d087d60",
+      "bytes": 440207
+    },
+    "data/raw/etf_prices.pkl": {
+      "sha256": "bbb71c3e9bcab36d61fdae20f0fb0f5b1d81f33b149937a8697bfb2919a8bb34",
+      "bytes": 886992
+    },
+    "data/raw/risk_free.pkl": {
+      "sha256": "3e2713f5572978c3c22c3fb775968069d642f8b911d31ae48c0e025bb21f1be8",
+      "bytes": 171022
+    }
+  },
+  "note": "Pre-correction outputs supersedes; do not cite old CAGRs"
+}

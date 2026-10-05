@@ -38,10 +38,14 @@ def sharpe(r: pd.Series, rf_daily: pd.Series | float = 0.0, periods_per_year: fl
 
 
 def max_drawdown(r: pd.Series) -> float:
-    wealth = (1 + r.fillna(0)).cumprod()
+    """Drawdown vs initial NAV=1 (peak starts at 1 before any returns)."""
+    if r.empty:
+        return np.nan
+    w = (1 + r.fillna(0)).cumprod()
+    wealth = pd.concat([pd.Series([1.0]), w], ignore_index=True)
     peak = wealth.cummax()
     dd = wealth / peak - 1
-    return float(dd.min()) if len(dd) else np.nan
+    return float(dd.min())
 
 
 def tracking_error(r: pd.Series, b: pd.Series, periods_per_year: float = 252.0) -> float:

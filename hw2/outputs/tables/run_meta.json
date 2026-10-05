@@ -1,13 +1,23 @@
 {
+  "correction_branch": "hw2/accounting-correction",
   "design_end": "2025-12-31",
-  "holdout_start": "2026-01-01",
+  "prev_examined_start": "2026-01-01",
   "n_universe_used": 498,
+  "execution": "next_close",
+  "accounting": "begin_weight_dot_return_then_drift",
+  "data_label": "BIASED_EXPLORATORY_YAHOO_CURRENT_CONSTITUENT_PANEL",
+  "superseded_numbers": [
+    "Do not cite pre-correction ~43.5% stock CAGR, ~81.6% holdout CAGR, or ~14.7% ETF-proxy CAGR"
+  ],
   "assumptions": [
-    "Research panel = current Wikipedia S&P 500 constituents (survivorship/membership bias).",
-    "Not historical S&P 500 index membership.",
+    "Research panel = current S&P 500 constituents (survivorship/membership bias).",
+    "Not historical S&P 500; not CRSP top-500.",
     "Yahoo fundamentals are restated; 60-day lag approximates availability only.",
     "Current GICS sectors applied historically.",
-    "Trades at month-end close; returns from next day via daily weight drift.",
-    "Costs are estimated proportional per-side bps, not observed execution."
+    "Signals at month-end close; trades at next session close.",
+    "Portfolio return = beginning weights \u00b7 asset returns; then drift.",
+    "Costs = L1 traded weight * bps_per_side; NAV scaled (1+Rp)*(1-cost)*(1-fee)-1.",
+    "FRED DGS3MO is a yield converted as y/100/252 \u2014 not Kenneth French realized RF.",
+    "2026 evaluation period was previously inspected \u2014 not an untouched test set."
   ]
 }

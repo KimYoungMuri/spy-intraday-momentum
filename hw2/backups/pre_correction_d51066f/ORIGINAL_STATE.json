@@ -1,0 +1,139 @@
+{
+  "original_commit": "d51066fa948315e100f76aaf95659b262602e035",
+  "branch": "hw2/accounting-correction",
+  "superseded_claims": [
+    "stock VQM design CAGR 0.43457765",
+    "holdout CAGR 0.81583854",
+    "ETF proxy long CAGR 0.14677539"
+  ],
+  "note": "Prior performance figures are UNVERIFIED due to beginning-of-period weight bug (weights updated before portfolio return).",
+  "data_files": [
+    {
+      "path": "hw2/data/raw/download_inventory.json",
+      "bytes": 354,
+      "sha256": "8c7fcdf43426d30d8e6748e3fa3e9080ce29f8be3588ee62a875f249ba6be97a"
+    },
+    {
+      "path": "hw2/data/raw/etf_prices.pkl",
+      "bytes": 886992,
+      "sha256": "bbb71c3e9bcab36d61fdae20f0fb0f5b1d81f33b149937a8697bfb2919a8bb34"
+    },
+    {
+      "path": "hw2/data/raw/fundamentals_raw.pkl",
+      "bytes": 440207,
+      "sha256": "f043cf083e50f6c0807d234f7c378c825fb55c9c9bf0f0c5a213ebf59d087d60"
+    },
+    {
+      "path": "hw2/data/raw/prices_daily.pkl",
+      "bytes": 131674721,
+      "sha256": "1477801706f460602b6e60d98ad019c1d92dc97177f839a8ff71380412b930cb"
+    },
+    {
+      "path": "hw2/data/raw/research_ticker_panel.csv",
+      "bytes": 61768,
+      "sha256": "a132880596ffbef992bcf947d8bc3b07bb5443fdecc37cc1a13f288115d507b8"
+    },
+    {
+      "path": "hw2/data/raw/risk_free.pkl",
+      "bytes": 171022,
+      "sha256": "3e2713f5572978c3c22c3fb775968069d642f8b911d31ae48c0e025bb21f1be8"
+    },
+    {
+      "path": "hw2/data/raw/sector_map.csv",
+      "bytes": 19692,
+      "sha256": "fca68308b0ff3f1e133c94d00e5726778a5c1856e4cfb5137c7176cd21cde824"
+    },
+    {
+      "path": "hw2/data/raw/shares_all.pkl",
+      "bytes": 133460,
+      "sha256": "6dccc6ae88d29955e5643c44e86ed255d89b740dfa4a8cc2b84a3101f2a1e14a"
+    },
+    {
+      "path": "hw2/data/raw/sp500_constituents_github.csv",
+      "bytes": 53677,
+      "sha256": "8e8c5a9aa27079a1feb6f92f9d56c5ad7a2084263a66d4191c54705a5b77c2ed"
+    },
+    {
+      "path": "hw2/data/raw/universe_meta.json",
+      "bytes": 324,
+      "sha256": "277650ebf022b3c2dad9cf93a2a1b114393563d03fb7c37b0c5b262d9a14068e"
+    },
+    {
+      "path": "hw2/data/processed/coverage.json",
+      "bytes": 214,
+      "sha256": "984d3aa728349f832d30246fb7dbed5e67bbb25373a594655083d80904362ab2"
+    },
+    {
+      "path": "hw2/data/processed/etf_prices.pkl",
+      "bytes": 886996,
+      "sha256": "1519cd6976edcd37c993a68308f2bd9311157a6bac6118c240c219349a829df7"
+    },
+    {
+      "path": "hw2/data/processed/fundamentals_q.pkl",
+      "bytes": 258228,
+      "sha256": "2bd377aa696e52fe156f96a37a7d6ed146ca0fa2b44c4504e3fe2c341d693285"
+    },
+    {
+      "path": "hw2/data/processed/prices.pkl",
+      "bytes": 131674725,
+      "sha256": "a771c5df8d705c61eebf1bf699da24d249477157c7391a26f88e53fe785ed970"
+    },
+    {
+      "path": "hw2/data/processed/risk_free.pkl",
+      "bytes": 171073,
+      "sha256": "0fa1128a3c8041f5918b6fa1054043ba75e05aa1035d91786055d7a6ba4ca651"
+    },
+    {
+      "path": "hw2/data/processed/sectors.csv",
+      "bytes": 9618,
+      "sha256": "56d297c1fd28ab43cc54c6c9c5672e3d717c95b8cd15f46415b422731af3eb60"
+    },
+    {
+      "path": "hw2/data/processed/shares.pkl",
+      "bytes": 36703,
+      "sha256": "11c5ca5fcee5340a75a0e26d00dd312e98897a96648caaf30f31477392029ed3"
+    }
+  ],
+  "pip_freeze_head": [
+    "beautifulsoup4==4.15.0",
+    "certifi==2026.7.22",
+    "cffi==2.1.1",
+    "charset-normalizer==3.5.2",
+    "contourpy==1.4.0",
+    "curl_cffi==0.16.3",
+    "cycler==0.12.1",
+    "et_xmlfile==2.0.0",
+    "fonttools==4.66.1",
+    "formulaic==1.2.2",
+    "html5lib==1.1",
+    "idna==3.20",
+    "interface_meta==2.0.1",
+    "kiwisolver==1.5.1",
+    "lxml==6.1.3",
+    "matplotlib==3.11.2",
+    "multitasking==0.0.13",
+    "narwhals==2.27.0",
+    "numpy==2.5.3",
+    "openpyxl==3.1.5",
+    "packaging==26.3",
+    "pandas==3.0.6",
+    "pandas-datareader==0.11.1",
+    "patsy==1.0.3",
+    "peewee==4.5.2",
+    "pillow==12.3.0",
+    "platformdirs==4.12.3",
+    "protobuf==7.36.2",
+    "pyarrow==25.0.1",
+    "pycparser==3.0",
+    "pyparsing==3.3.3",
+    "pypdf==6.19.0",
+    "python-dateutil==2.9.0.post0",
+    "pytz==2026.5",
+    "PyYAML==6.0.3",
+    "requests==2.34.2",
+    "scipy==1.18.1",
+    "seaborn==0.13.2",
+    "setuptools==84.0.0",
+    "sis-hw2==0.1.0"
+  ]
+}
